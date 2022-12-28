@@ -39,9 +39,18 @@ Then run the following commands:
 make && make install
 ```
 
+## Usage
+
+1. Once `make install` runs successfully, GNOME Shell needs to be restarted. (*Xorg: `Alt`+`F2`, `r`, `Enter` - Wayland: `log out` or `reboot`*)
+2. Enable the extension through the *gnome-extensions* app.
+3. Open the extension preferences via the same *gnome-extensions* app and enter your OpenAI API key.
+4. The icon in the top bar can either be clicked or the `CTRL + SHIFT + Y` shortcut can be used to open the AskAI window.
+5. After typing a prompt, either "Ask" can be pressed or just hitting `Enter` will send the prompt to GPT-3.
+
 ## TODO
 
-- [ ] Allow the response to be copied to the clipboard
+- [ ] Allow the response to be copied to the clipboard.
+- [ ] Add button to open settings from this extension.
 - [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
 
 ## Credits
