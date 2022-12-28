@@ -1,0 +1,228 @@
+.askai-button {
+	border-radius: 32px;
+	padding: 13px;
+}
+
+.askai-button:hover {
+	border: none;
+	padding: 14px;
+}
+
+.askai-button > StIcon {
+	icon-size: 6px;
+}
+
+.askai-button > StLabel {
+	padding: 6px;
+}
+
+.askai-menu-button-container {
+	padding: 0px;
+}
+
+.askai-button-box {
+	padding: 0px;
+	spacing: 12px;
+}
+
+.askai-current-summarybox,
+.askai-forecast-icon,
+.askai-current-databox-captions,
+.askai-current-databox-values,
+.askai-current-icon,
+.askai-forecast-summary,
+.askai-forecast-temperature {
+	border-radius: 0px;
+	padding: 0px;
+	border: 0px;
+}
+
+.askai-current-summarybox {
+	padding-top: 5px;
+	padding-right: 60px;
+}
+
+.askai-current-summary {
+	font-size: 36px;
+}
+
+.askai-current-databox {
+	padding: 5px 15px 0px;
+}
+
+.askai-current-icon {
+	padding-right: 40px;
+}
+
+.askai-current-iconbox {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+.askai-icon:ltr {
+	padding-right: 5px;
+}
+
+.askai-icon:rtl {
+	padding-left: 5px;
+}
+
+.askai-label {
+	padding-right: 6px;
+}
+
+.askai-current-databox-captions {
+	text-align: right;
+	padding-right: 5px;
+	spacing: 0;
+}
+
+.askai-today-box {
+	padding-top: 15px;
+	padding-bottom: 15px;
+}
+
+.askai-forecast-expander {
+	padding-right: 15px;
+	padding-left: 15px;
+}
+
+.askai-forecast-box {
+	padding-top: 15px;
+}
+
+.askai-forecast-icon {
+	padding-right: 10px;
+}
+
+.askai-forecasts {
+	-st-hfade-offset: 60px;
+}
+
+.askai-today-databox {
+	text-align: center;
+	padding-right: 35px;
+	padding-left: 35px;
+}
+
+.askai-forecast-databox {
+	text-align: center;
+	min-width: 180px;
+	min-height: 120px;
+}
+
+.askai-forecast-day {
+	min-height: 120px;
+	padding: 0px 2px 0px 0px;
+	text-align: right;
+	font-weight: bold;
+	font-size: 90%;
+	spacing: 0;
+}
+
+.askai-forcast-time {
+	font-size: 85%;
+	padding-bottom: 5px;
+	spacing: 0;
+}
+
+.askai-forecast-iconbox {
+	text-align: center;
+	vertical-align: top;
+}
+
+.askai-forecast-summary {
+	padding-top: 5px;
+	font-size: 80%;
+}
+
+.askai-sunrise-icon {
+	padding-right: 5px;
+}
+
+.askai-sunset-icon {
+	padding-left: 15px;
+	padding-right: 5px;
+}
+
+.askai-build-icon {
+	padding-left: 15px;
+	padding-right: 5px;
+}
+
+.askai-button-action {
+	-st-icon-style: symbolic;
+	border-radius: 32px;
+	margin: 0px;
+	min-height: 22px;
+	min-width: 22px;
+	padding: 10px;
+	font-size: 100%;
+}
+
+.askai-button-action:hover,
+.askai-button-action:focus {
+	border: none;
+	padding: 11px;
+}
+
+.askai-button-action > StIcon {
+	icon-size: 16px;
+}
+
+/* ask ai new UI */
+.askai-main-container {
+	padding: 0 10px;
+	color: black;
+}
+/* container for user input */
+.askai-content {
+	border-radius: 5px;
+	padding: 5px;
+}
+
+/* input label */
+.askai-label {
+	margin-bottom: 5px;
+	padding-right: 6px;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.askai-input-container {
+	margin-bottom: 10px;
+}
+
+.askai-input {
+	border-radius: 5px;
+	padding: 5px;
+	color: black;
+	border: 2px solid #d3d3d3;
+}
+.askai-input:focus {
+	border: 2px solid #4d4dff;
+}
+
+/* submit button */
+.askai-submit {
+	background-color: #4d4dff;
+	color: white;
+	border-radius: 5px;
+	margin-left: 12px;
+	padding: 8px 10px;
+}
+.askai-submit:hover {
+	background-color: #3d3dff;
+}
+
+.askai-submit-text {
+	font-weight: bold;
+	text-align: center;
+}
+
+.askai-result {
+	border: 2px solid #4d4dff;
+	border-radius: 5px;
+	margin-top: 5px;
+	padding: 15px;
+}

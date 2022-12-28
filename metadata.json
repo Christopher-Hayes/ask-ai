@@ -1,0 +1,10 @@
+{
+  "name": "Ask AI",
+  "description": "Get AI-powered explanations instantly in your GNOME Shell",
+  "shell-version": ["42", "43"],
+  "url": "",
+  "uuid": "ask-ai@hayes.software",
+  "settings-schema": "org.gnome.shell.extensions.ask-ai",
+  "gettext-domain": "gnome-shell-extension-ask-ai",
+  "version": 1.0
+}

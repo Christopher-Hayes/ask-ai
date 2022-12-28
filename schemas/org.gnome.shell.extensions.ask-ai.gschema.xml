@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extension-ask-ai">
+  <enum id="org.gnome.shell.extensions.ask-ai.position">
+    <value value="0" nick="center"/>
+    <value value="1" nick="right"/>
+    <value value="2" nick="left"/>
+  </enum>
+  <schema path="/org/gnome/shell/extensions/ask-ai/" id="org.gnome.shell.extensions.ask-ai">
+    <key type="as" name="ask-ai-shortcut">
+      <default><![CDATA[['<Ctrl><Shift>y']]]></default>
+      <summary>AskAI shortcut</summary>
+      <description>
+        You can create GTK entry in prefs and set it as CDATA.
+      </description>
+    </key>
+    <key type="s" name="openai-key">
+      <default>''</default>
+      <summary>Your personal OpenAI API key</summary>
+    </key>
+
+    <key name="position-in-panel" enum="org.gnome.shell.extensions.ask-ai.position">
+      <default>'center'</default>
+      <summary>Position in Panel</summary>
+    </key>
+    <key type="i" name="position-index">
+      <default>0</default>
+      <summary>Position in Panel</summary>
+    </key>
+    <key name="menu-alignment" type="d">
+      <default>75.0</default>
+      <summary>Horizontal position of menu-box.</summary>
+    </key>
+    <key type="i" name="decimal-places">
+      <default>1</default>
+      <summary>Maximal number of digits after the decimal point</summary>
+    </key>
+    <key type="i" name="delay-ext-init">
+      <default>5</default>
+      <summary>Seconds to delay popup initialization and data fetch on the first load</summary>
+    </key>
+    <key type="i" name="prefs-default-width">
+      <default>700</default>
+      <summary>Default width for the preferences window</summary>
+    </key>
+    <key type="i" name="prefs-default-height">
+      <default>600</default>
+      <summary>Default height for the preferences window</summary>
+    </key>
+  </schema>
+</schemalist>
