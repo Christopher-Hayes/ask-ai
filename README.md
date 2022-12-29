@@ -89,19 +89,26 @@ Here's the general dev flow:
 - GNOME Shell is the "shell" of the **GNOME desktop environment**. It was introduced to improve the stock GNOME environment. GNOME Shell being a Mutter plugin does however mean that the GNOME user experience is tighly coupled with Mutter, you can't swap out Mutter for another window manager without breaking GNOME.
 - And finally, this project! ..is an extension for the GNOME Shell.... which is a plugin for Mutter.. which is a window manager for X11 and Wayland.. which are display server protocols.
 
+### GNOME Shell UI Tech
+
+- GNOME Shell uses **Clutter** and **St** to build out the UI, this due to GNOME Shell being built on Mutter.
+- Something to note about Clutter is that [it is no longer part of the GNOME SDK](https://blogs.gnome.org/clutter/2022/02/16/retiring-clutter/). So for applications in the GNOME desktop environment, GTK should be used instead.
+- However, GNOME Shell can ONLY use Clutter and St. Gtk is only mentioned below because a couple utility functions are used. Gtk UIs cannot be built for GNOME Shell extensions.
+- This begs the question if Mutter is the reason GNOME Shell cannot use Gtk, how are GNOME desktop applications able to use Gtk? And the confusing answer is the GNOME desktop environment does not soley rely on Mutter as the window manage. GNOME Shell uses Mutter; however, the rest of GNOME uses gdm3 (GNOME Display Manager 3), and gdm3 supports Gtk. 
+
 ### Libraries
 
 - `Clutter`: is a 2D graphics library that is used by GNOME Shell to draw the UI. [Official Clutter Docs](https://gnome.pages.gitlab.gnome.org/mutter/clutter/)
-  - Note that while GNOME Shell extension development can keep using Clutter without issue, [Clutter is no longer part of the GNOME SDK](https://blogs.gnome.org/clutter/2022/02/16/retiring-clutter/).
+  - Note that while GNOME Shell extension development can keep using Clutter without issue, .
+- `St`: is a library for creating graphical user interfaces. [Official St docs](https://gjs-docs.gnome.org/st10/)
 - `Gio`: is a library for input/output and networking. It is used by GNOME Shell to read and write files, and to communicate with the network. [Offical Gio docs](https://gjs-docs.gnome.org/gio20~2.0/)
-- `Gtk`: is a library for creating graphical user interfaces. [Official Gtk docs](https://gjs-docs.gnome.org/gtk30~3.0/)
 - `GLib`: is a library for common tasks such as data structures, file manipulation, and string manipulation. [Official GLib docs](https://gjs-docs.gnome.org/glib20~2.0/)
 - `GObject`: is a library for object-oriented programming. [Official GObject docs](https://gjs-docs.gnome.org/gobject20~2.0/)
 - `Meta`: is a library for the window manager. [Official Meta docs](https://gjs-docs.gnome.org/meta11~11/)
 - `Pango`: is a library for text layout and rendering. [Official Pango docs](https://gjs-docs.gnome.org/pango10~1.0/)
 - `Shell`: is a library for the GNOME Shell. [Official Shell docs](https://gjs-docs.gnome.org/shell01~0.1/)
-- `St`: is a library for creating graphical user interfaces. [Official St docs](https://gjs-docs.gnome.org/st10/)
 - `libsoup3`: is a library for HTTP requests. [Official libsoup3 docs](https://gjs-docs.gnome.org/libsoup3~3.0/)
+- `Gtk`: is a library for creating graphical user interfaces. Note - GNOME Shell only uses Gtk utility functions. The UI cannot be built with Gtk. [Official Gtk docs](https://gjs-docs.gnome.org/gtk30~3.0/)
 
 ## Credits
 
