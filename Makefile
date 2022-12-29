@@ -4,11 +4,9 @@ PKG_NAME = gnome-shell-extension-ask-ai
 UUID = ask-ai@hayes.software
 BASE_MODULES = metadata.json
 SRC_MODULES = extension.js askai.js prefs.js stylesheet.css
+UI_MODULES = main.glade
 PREFS_MODULES = generalPage.js layoutPage.js aboutPage.js
 EXTRA_DIRECTORIES = media
-TOLOCALIZE = $(addprefix src/, extension.js askai.js prefs.js) \
-             $(addprefix src/preferences/, $(PREFS_MODULES)) \
-             schemas/org.gnome.shell.extensions.ask-ai.gschema.xml
 
 # Packagers: Use DESTDIR for system wide installation
 ifeq ($(strip $(DESTDIR)),)
@@ -68,7 +66,9 @@ zip-file: _build
 _build: all
 	-rm -fR ./_build
 	mkdir -p _build/preferences
+	mkdir -p _build/ui
 	cp $(BASE_MODULES) $(addprefix src/, $(SRC_MODULES)) _build
+	cp $(addprefix src/ui/, $(UI_MODULES)) _build/ui
 	cp $(addprefix src/preferences/, $(PREFS_MODULES)) _build/preferences
 	cp -r $(EXTRA_DIRECTORIES) _build
 	mkdir -p _build/schemas

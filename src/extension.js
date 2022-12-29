@@ -359,6 +359,17 @@ class AskAIMenuButton extends PanelMenu.Button {
         // Destroy all children
         this._askAI.actor.destroy_all_children();
 
+        // Get UI via a Glade file in ui/main.glade
+        let builder = new Gtk.Builder();
+        builder.add_from_file(Me.path + '/ui/main.glade');
+
+        // Get the main container
+        let mainContainer = builder.get_object('main-content');
+
+        // Add the main container to the ask AI container
+        this._askAI.actor.add_child(mainContainer);
+
+        /*
         // Create the main container
         const mainContainer = new St.BoxLayout({
             x_expand: true,
@@ -452,6 +463,7 @@ class AskAIMenuButton extends PanelMenu.Button {
 
         mainContainer.add_actor(content);
         this._askAI.actor.add_child(mainContainer);
+        */
     }
 });
 
