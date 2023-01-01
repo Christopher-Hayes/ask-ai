@@ -1,260 +1,144 @@
-.askai-button {
-	border-radius: 32px;
-	padding: 13px;
-}
+/*
+Main Styles
+- CSS vars are apparently not supported.
+- Element naming convention: loosely BEM
+- Theming was an experiment. For now, just assume light theme is used.
 
-.askai-button:hover {
-	border: none;
-	padding: 14px;
-}
-
-.askai-button > StIcon {
-	icon-size: 6px;
-}
-
-.askai-button > StLabel {
-	padding: 6px;
-}
-
-.askai-menu-button-container {
-	padding: 0px;
-}
-
-.askai-button-box {
-	padding: 0px;
-	spacing: 12px;
-}
-
-.askai-current-summarybox,
-.askai-forecast-icon,
-.askai-current-databox-captions,
-.askai-current-databox-values,
-.askai-current-icon,
-.askai-forecast-summary,
-.askai-forecast-temperature {
-	border-radius: 0px;
-	padding: 0px;
-	border: 0px;
-}
-
-.askai-current-summarybox {
-	padding-top: 5px;
-	padding-right: 60px;
-}
-
-.askai-current-summary {
-	font-size: 36px;
-}
-
-.askai-current-databox {
-	padding: 5px 15px 0px;
-}
-
-.askai-current-icon {
-	padding-right: 40px;
-}
-
-.askai-current-iconbox {
-	padding-right: 20px;
-	padding-left: 20px;
-}
-
-.askai-icon:ltr {
-	padding-right: 5px;
-}
-
-.askai-icon:rtl {
-	padding-left: 5px;
-}
-
-.askai-label {
-	padding-right: 6px;
-}
-
-.askai-current-databox-captions {
-	text-align: right;
-	padding-right: 5px;
-	spacing: 0;
-}
-
-.askai-today-box {
-	padding-top: 15px;
-	padding-bottom: 15px;
-}
-
-.askai-forecast-expander {
-	padding-right: 15px;
-	padding-left: 15px;
-}
-
-.askai-forecast-box {
-	padding-top: 15px;
-}
-
-.askai-forecast-icon {
-	padding-right: 10px;
-}
-
-.askai-forecasts {
-	-st-hfade-offset: 60px;
-}
-
-.askai-today-databox {
-	text-align: center;
-	padding-right: 35px;
-	padding-left: 35px;
-}
-
-.askai-forecast-databox {
-	text-align: center;
-	min-width: 180px;
-	min-height: 120px;
-}
-
-.askai-forecast-day {
-	min-height: 120px;
-	padding: 0px 2px 0px 0px;
-	text-align: right;
-	font-weight: bold;
-	font-size: 90%;
-	spacing: 0;
-}
-
-.askai-forcast-time {
-	font-size: 85%;
-	padding-bottom: 5px;
-	spacing: 0;
-}
-
-.askai-forecast-iconbox {
-	text-align: center;
-	vertical-align: top;
-}
-
-.askai-forecast-summary {
-	padding-top: 5px;
-	font-size: 80%;
-}
-
-.askai-sunrise-icon {
-	padding-right: 5px;
-}
-
-.askai-sunset-icon {
-	padding-left: 15px;
-	padding-right: 5px;
-}
-
-.askai-build-icon {
-	padding-left: 15px;
-	padding-right: 5px;
-}
-
-.askai-button-action {
-	-st-icon-style: symbolic;
-	border-radius: 32px;
-	margin: 0px;
-	min-height: 22px;
-	min-width: 22px;
-	padding: 10px;
-	font-size: 100%;
-}
-
-.askai-button-action:hover,
-.askai-button-action:focus {
-	border: none;
-	padding: 11px;
-}
-
-.askai-button-action > StIcon {
-	icon-size: 16px;
-}
-
-/* ask ai new UI */
-.askai-main-container {
-	padding: 0 10px;
-	color: black;
-}
-/* container for user input */
-.askai-content {
+/** Common ------------------------------------------------------------------ */
+.btn {
+	background-color: #4d4dff;
 	border-radius: 5px;
+	padding: 8px 10px;
+}
+.main.light .btn {
+	color: #fff;
+}
+.main.dark .btn {
+	color: #000;
+}
+.btn_text {
+	font-weight: bold;
+	text-align: center;
+}
+
+/** Main container ---------------------------------------------------------- */
+.content {
 	padding: 5px;
 }
+.main {
+	padding: 0;
+	margin: 0;
+	border: 0px solid red;
+	outline: 0;
+}
+.main.light  {
+	color: #000;
+	background-color: #fff;
+}
+.main.dark {
+	color: #fff;
+	background-color: #000;
+}
 
-/* input label */
-.askai-label {
+/** Header ------------------------------------------------------------------ */
+.heading {
 	margin-bottom: 12px;
 	margin-left: 6px;
 	font-size: 18px;
 	font-weight: bold;
 }
 
-.askai-input-container {
+/** Input section ----------------------------------------------------------- */
+.input-container {
 	margin-bottom: 10px;
 }
-
-.askai-input {
+.input {
 	border-radius: 5px;
 	padding: 5px;
-	color: black;
+}
+.main.light .input {
+	color: #000;
 	border: 2px solid #d3d3d3;
 }
-.askai-input:focus {
+.main.dark .input {
+	color: #fff;
+	border: 2px solid #777;
+}
+.main.light .input:focus {
+	border: 2px solid #4d4dff;
+}
+.main.dark .input:focus {
 	border: 2px solid #4d4dff;
 }
 
-/* buttons */
-.askai-submit,
-.askai-copy {
-	color: white;
-	border-radius: 5px;
-	overflow: hidden;
-	padding: 8px 10px;
-}
-.askai-submit {
+.submit {
 	margin-left: 12px;
 }
-.askai-copy {
-	margin-top: 12px;
-	margin-right: 12px;
-}
 
-.askai-submit-text,
-.askai-copy-text {
-	font-weight: bold;
-	text-align: center;
-}
-
-.askai-result {
+/** AI response section ----------------------------------------------------- */
+.result {
 	border: 2px solid #4d4dff;
 	border-radius: 5px;
-	color: black;
+	color: #000;
 	margin-top: 5px;
 	padding: 15px;
 }
+.result.dark {
+	color: #fff;
+	border: 2px solid #4d4dff;
+}
 
-.askai-info {
+/** Footer ------------------------------------------------------------------ */
+.copy {
+	margin-top: 12px;
+	margin-right: 12px;
+}
+.info {
 	color: #777;
 	font-size: 12px;
 	margin-top: 12px;
 }
+.info.dark {
+	color: #777;
+}
 
-.askai-warning-container {
+/** No API key set warning -------------------------------------------------- */
+.warning-container {
 	background-color: #ff4d4d;
 	border-radius: 4px;
 	padding: 4px;
 	margin-bottom: 10px;
 	font-weight: semibold;
 }
-
-.askai-warning-button {
+.btn.warning-button {
 	padding: 2px;
 	border-radius: 5px;
 	background-color: #b30000;
 	margin-bottom: 10px;
 }
-
-.askai-warning-button-text {
+.btn_text.warning-button_text {
 	color: #fff;
 	font-size: 14px;
 }
+
+/** Theming -----------------------------------------------------------------
+
+* Light theme
+Primary: #4d4dff
+Background: #000
+Primary Text: #fff
+Error background: #ff4d4d
+Error background darker: #b30000
+Gray-400: #777
+Gray-700: #d3d3d3
+
+* Dark theme
+Primary: #4d4dff
+Background: #fff
+Primary Text: #000
+Error background: #ff4d4d
+Error background darker: #b30000
+Gray-400: #777
+Gray-700: #d3d3d3
+
+*/

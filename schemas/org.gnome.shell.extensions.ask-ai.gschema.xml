@@ -30,10 +30,6 @@
       <default>75.0</default>
       <summary>Horizontal position of menu-box.</summary>
     </key>
-    <key type="i" name="decimal-places">
-      <default>1</default>
-      <summary>Maximal number of digits after the decimal point</summary>
-    </key>
     <key type="i" name="delay-ext-init">
       <default>5</default>
       <summary>Seconds to delay popup initialization and data fetch on the first load</summary>

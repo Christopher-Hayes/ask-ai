@@ -31,10 +31,16 @@ let AskAIMenuButton = GObject.registerClass(
     _init() {
       super._init(0, "AskAIMenuButton", false);
 
-      // Putting the panel item together
+      // Theming
+      this._theme = 'light';
+
+      // Setup network things
+      this._waitingForResponse = false;
+
+      // Topbar icon
       this._askAIIcon = new St.Icon({
         icon_name: "view-refresh-symbolic",
-        style_class: "system-status-icon askai-icon",
+        style_class: "system-status-icon icon",
       });
       this._askAIIcon.set_gicon(
         Gio.icon_new_for_string(Me.path + "/media/ask-ai-icon.svg")
@@ -75,9 +81,6 @@ let AskAIMenuButton = GObject.registerClass(
         }
       );
 
-      // Setup network things
-      this._waitingForResponse = false;
-
       // Bind signals
       this.menu.connect("open-state-changed", this.recalcLayout.bind(this));
 
@@ -85,6 +88,7 @@ let AskAIMenuButton = GObject.registerClass(
       this.checkPositionInPanel();
       this._askAI = new PopupMenu.PopupBaseMenuItem({
         reactive: false,
+        style_class: `main ${this._theme}`,
       });
 
       let _firstBootWait = this._startupDelay;
@@ -95,14 +99,14 @@ let AskAIMenuButton = GObject.registerClass(
           GLib.PRIORITY_DEFAULT,
           _firstBootWait,
           () => {
-            this.rebuildAskAIUi();
+            this.buildUI();
             _firstBoot = 0;
             this._timeoutFirstBoot = null;
             return false; // run timer once then destroy
           }
         );
       } else {
-        this.rebuildAskAIUi();
+        this.buildUI();
       }
 
       this.menu.addMenuItem(this._askAI);
@@ -124,6 +128,17 @@ let AskAIMenuButton = GObject.registerClass(
           }
         });
       }
+    }
+
+    // Not used, but the capability is there
+    // Reasons - Can't seem to get around the white popup border, and probably should leave theming to GNOME anyways
+    updateTheme(newTheme) {
+      this._theme = newTheme;
+      this._askAI.set_style_class_name(`main ${this._theme}`);
+    }
+    toggleTheme() {
+      this._theme = this._theme === 'light' ? 'dark' : 'light';
+      this.updateTheme(this._theme);
     }
 
     stop() {
@@ -185,7 +200,7 @@ let AskAIMenuButton = GObject.registerClass(
 
         this.checkAlignment();
         this.checkPositionInPanel();
-        this.rebuildAskAIUi();
+        this.buildUI();
 
         AskAI.getTodaysUsage(key).then((usage) => {
           this._todaysTokenUsage = usage;
@@ -209,7 +224,7 @@ let AskAIMenuButton = GObject.registerClass(
       this._settingsInterfaceC = this._settingsInterface.connect(
         "changed",
         () => {
-          this.rebuildAskAIUi();
+          this.buildUI();
         }
       );
     }
@@ -224,11 +239,6 @@ let AskAIMenuButton = GObject.registerClass(
     get _startupDelay() {
       if (!this._settings) this.loadConfig();
       return this._settings.get_int("delay-ext-init");
-    }
-
-    get _text_in_panel() {
-      if (!this._settings) this.loadConfig();
-      return this._settings.get_boolean("show-text-in-panel");
     }
 
     get _position_in_panel() {
@@ -246,22 +256,6 @@ let AskAIMenuButton = GObject.registerClass(
       return this._settings.get_double("menu-alignment");
     }
 
-    get _comment_in_panel() {
-      if (!this._settings) this.loadConfig();
-      return this._settings.get_boolean("show-comment-in-panel");
-    }
-
-    get _refresh_interval_current() {
-      if (!this._settings) this.loadConfig();
-      let v = this._settings.get_int("refresh-interval-current");
-      return v >= 600 ? v : 600;
-    }
-
-    get _decimal_places() {
-      if (!this._settings) this.loadConfig();
-      return this._settings.get_int("decimal-places");
-    }
-
     createButton(iconName, accessibleName) {
       let button;
 
@@ -270,7 +264,7 @@ let AskAIMenuButton = GObject.registerClass(
         can_focus: true,
         track_hover: true,
         accessible_name: accessibleName,
-        style_class: "message-list-clear-button button askai-button-action",
+        style_class: "btn",
       });
 
       button.child = new St.Icon({
@@ -443,39 +437,19 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       }
     }
 
-    rebuildAskAIUi() {
-      // Destroy all children
-      this._askAI.actor.destroy_all_children();
-
-      // Create the main container
-      const mainContainer = new St.BoxLayout({
-        x_expand: true,
-        y_expand: true,
-        style_class: "askai-main-container",
-      });
-
-      // Create a box layout to for a label and an input field for the user to enter a question to ask AI
-      let content = new St.BoxLayout({
-        vertical: true,
-        x_expand: true,
-        y_expand: true,
-        style_class: "system-menu-action askai-content",
-      });
-
-      // Add warning message if no OpenAI key is set. Use light red background color and dark red text color. Rounded corners. Padding.
-      // TODO: Expand this to a test request to the OpenAI API to see if the key is valid
-      if (this._settings.get_string("openai-key") === "") {
+    // Show a warning if the user has not set the OpenAI key
+    showNoKeyWarning(content) {
         const warningContainer = new St.BoxLayout({
           vertical: true,
           x_expand: true,
           y_expand: true,
-          style_class: "system-menu-action askai-warning-container",
+          style_class: "warning-container",
           width: 400,
         });
 
         const warningText = new St.Label({
           text: "No OpenAI key set. Please set one in the extension settings. When you create an OpenAI account, you can make an API key in your account settings: https://beta.openai.com/account/api-keys",
-          style_class: "askai-warning-text",
+          style_class: "warning-text",
         });
         warningText.clutter_text.line_wrap = true;
         warningText.clutter_text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
@@ -505,7 +479,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         warningContainer.add_child(warningText);
 
         const openSettingsButton = new St.Button({
-          style_class: "askai-warning-button",
+          style_class: "btn warning-button",
           can_focus: true,
           y_align: Clutter.ActorAlign.CENTER,
           x_align: Clutter.ActorAlign.END,
@@ -516,7 +490,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         // set text on button
         const openSettingsButtonText = new St.Label({
           text: _("Open Settings"),
-          style_class: "askai-warning-button-text",
+          style_class: "btn_text warning-button_text",
           x_align: Clutter.ActorAlign.CENTER,
         });
 
@@ -529,7 +503,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           vertical: false,
           x_expand: true,
           y_expand: true,
-          style_class: "system-menu-action askai-settings-button-container",
+          style_class: "settings-button-container",
         });
 
         settingsButtonContainer.add_actor(openSettingsButton);
@@ -546,24 +520,37 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           }
         });
         */
-      }
+    }
 
-      // Create a label for the ask AI input field
-      let askAILabel = new St.Label({
-        text: _("Ask AI"),
-        style_class: "askai-label",
+    buildHeaderUI() {
+      const headerContainer = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_expand: true,
+        style_class: "header",
       });
 
+      // Create a label for the ask AI input field
+      let heading = new St.Label({
+        text: _("Ask AI"),
+        style_class: "heading",
+      });
+
+      headerContainer.add_actor(heading);
+      return headerContainer;
+    }
+
+    buildInputUI() {
       const inputContainer = new St.BoxLayout({
         vertical: false,
         x_expand: true,
         y_expand: true,
-        style_class: "system-menu-action askai-input-container",
+        style_class: "input-container",
       });
 
       // Create a input field for the user to enter a question to ask AI
       this._askAIInput = new St.Entry({
-        style_class: "askai-input",
+        style_class: "input",
         can_focus: true,
         x_expand: true,
         y_expand: true,
@@ -572,9 +559,14 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         width: 300,
       });
 
+      // Or if enter is pressed inside the input field
+      this._askAIInput.clutter_text.connect("activate", async () => {
+        await this.makeAIRequest();
+      });
+
       // Create a button to submit the question to ask AI
       this._askAISubmit = new St.Button({
-        style_class: "askai-submit",
+        style_class: "btn submit",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         track_hover: true,
@@ -587,21 +579,29 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         }),
       });
 
-      inputContainer.add_actor(this._askAIInput);
-      inputContainer.add_actor(this._askAISubmit);
+      // If submit button is clicked
+      this._askAISubmit.connect("clicked", async () => {
+        await this.makeAIRequest();
+      });
 
       // set text on button
       this._askAISubmitText = new St.Label({
         text: _("Ask"),
-        style_class: "askai-submit-text",
+        style_class: "btn_text submit_text",
         x_align: Clutter.ActorAlign.CENTER,
       });
 
       this._askAISubmit.set_child(this._askAISubmitText);
 
+      inputContainer.add_actor(this._askAIInput);
+      inputContainer.add_actor(this._askAISubmit);
+      return inputContainer;
+    }
+
+    buildOutputUI() {
       // Use St.Bin
       this._askAIResult = new St.Bin({
-        style_class: "askai-result",
+        style_class: "result",
         x_expand: true,
         y_expand: true,
         width: 500,
@@ -646,19 +646,13 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         }
       });
 
-      // If submit button is clicked
-      this._askAISubmit.connect("clicked", async () => {
-        await this.makeAIRequest();
-      });
+      return this._askAIResult;
+    }
 
-      // Or if enter is pressed inside the input field
-      this._askAIInput.clutter_text.connect("activate", async () => {
-        await this.makeAIRequest();
-      });
-
+    buildFooterUI() {
       // Footer container organize items in a row (left to right), space between them
       let footerContainer = new St.BoxLayout({
-        style_class: "askai-footer",
+        style_class: "footer",
         x_expand: true,
         y_expand: true,
         x_align: Clutter.ActorAlign.START,
@@ -670,7 +664,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       this._askAIInfo = new St.Label({
         // Show AskAI version number by default
         text: _("AskAI v" + Me.metadata.version),
-        style_class: "askai-info",
+        style_class: "info",
         x_align: Clutter.ActorAlign.START,
         y_align: Clutter.ActorAlign.CENTER,
         x_expand: true,
@@ -678,7 +672,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button for copying the response from ask AI called "Copy"
       this._askAICopy = new St.Button({
-        style_class: "askai-copy",
+        style_class: "btn copy",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
@@ -697,14 +691,11 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       // set text on button
       this._askAICopyText = new St.Label({
         text: _("Copy"),
-        style_class: "askai-copy-text",
+        style_class: "btn_text copy_text",
         x_align: Clutter.ActorAlign.CENTER,
       });
 
       this._askAICopy.set_child(this._askAICopyText);
-
-      footerContainer.add(this._askAICopy);
-      footerContainer.add(this._askAIInfo);
 
       // If copy button is clicked
       this._askAICopy.connect("clicked", () => {
@@ -779,13 +770,41 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         }
       });
 
-      content.add_actor(askAILabel);
-      content.add_actor(inputContainer);
-      content.add_actor(this._askAIResult);
-      content.add_actor(footerContainer);
+      footerContainer.add(this._askAICopy);
+      footerContainer.add(this._askAIInfo);
+      return footerContainer;
+    }
 
-      mainContainer.add_actor(content);
-      this._askAI.actor.add_child(mainContainer);
+    buildUI() {
+      // Destroy all children
+      this._askAI.actor.destroy_all_children();
+
+      let content = new St.BoxLayout({
+        vertical: true,
+        x_expand: true,
+        y_expand: true,
+        style_class: "content",
+      });
+
+      // Add warning message if no OpenAI key is set. Use light red background color and dark red text color. Rounded corners. Padding.
+      // TODO: Expand this to a test request to the OpenAI API to see if the key is valid
+      if (this._settings.get_string("openai-key") === "") {
+        showNoKeyWarning(content);
+      }
+
+      // Header
+      content.add_actor(this.buildHeaderUI());
+
+      // User input, submit button
+      content.add_actor(this.buildInputUI());
+
+      // AI response text
+      content.add_actor(this.buildOutputUI());
+
+      // Footer
+      content.add_actor(this.buildFooterUI());
+
+      this._askAI.actor.add_child(content);
     }
   }
 );
