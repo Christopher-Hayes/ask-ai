@@ -183,8 +183,8 @@
 
 /* input label */
 .askai-label {
-	margin-bottom: 5px;
-	padding-right: 6px;
+	margin-bottom: 12px;
+	margin-left: 6px;
 	font-size: 18px;
 	font-weight: bold;
 }
@@ -203,19 +203,24 @@
 	border: 2px solid #4d4dff;
 }
 
-/* submit button */
-.askai-submit {
-	background-color: #4d4dff;
+/* buttons */
+.askai-submit,
+.askai-copy {
 	color: white;
 	border-radius: 5px;
-	margin-left: 12px;
+	overflow: hidden;
 	padding: 8px 10px;
 }
-.askai-submit:hover {
-	background-color: #3d3dff;
+.askai-submit {
+	margin-left: 12px;
+}
+.askai-copy {
+	margin-top: 12px;
+	margin-right: 12px;
 }
 
-.askai-submit-text {
+.askai-submit-text,
+.askai-copy-text {
 	font-weight: bold;
 	text-align: center;
 }
@@ -223,6 +228,33 @@
 .askai-result {
 	border: 2px solid #4d4dff;
 	border-radius: 5px;
+	color: black;
 	margin-top: 5px;
 	padding: 15px;
+}
+
+.askai-info {
+	color: #777;
+	font-size: 12px;
+	margin-top: 12px;
+}
+
+.askai-warning-container {
+	background-color: #ff4d4d;
+	border-radius: 4px;
+	padding: 4px;
+	margin-bottom: 10px;
+	font-weight: semibold;
+}
+
+.askai-warning-button {
+	padding: 2px;
+	border-radius: 5px;
+	background-color: #b30000;
+	margin-bottom: 10px;
+}
+
+.askai-warning-button-text {
+	color: #fff;
+	font-size: 14px;
 }

@@ -6,5 +6,5 @@
   "uuid": "ask-ai@hayes.software",
   "settings-schema": "org.gnome.shell.extensions.ask-ai",
   "gettext-domain": "gnome-shell-extension-ask-ai",
-  "version": 1.0
+  "version": 1.1
 }
