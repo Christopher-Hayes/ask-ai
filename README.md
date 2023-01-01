@@ -53,7 +53,7 @@ make && make install
 
 ## TODO
 
-- [ ] Allow the response to be copied to the clipboard.
+- [x] Allow the response to be copied to the clipboard.
 - [ ] Add button to open settings from this extension.
 - [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
 
@@ -87,7 +87,7 @@ Here's the general dev flow:
     - An example of a display server implementation of the X11 protocol is "X.Org Server".
     - As mentioned, this implementation needs a second program to do the compositing.
       - One example is **Mutter**, which acts as an X11 window manager and compositor.
-    - A word on naming - X/X11/Xorg can be used interchangeably, but it might be useful to know the nuances - the protocol is called the "X Window System" or "X" for short. X11 is the "current" release of this protocol, released in 1987. X.Org/Xorg is used to refer to the project as a whole.
+    - A word on naming - X/X11/Xorg can be used interchangeably, but it might be useful to know the nuances - the protocol is called the "X Window System" or "X" for short. X11 is the "current" release of this protocol, released in 1987. X.Org/Xorg is used to refer to the project and team as a whole.
 - There's other window managers, but Mutter is specifically mentioned because [**GNOME Shell**](https://www.wikiwand.com/en/GNOME_Shell) runs on Mutter. And since Mutter works with both X11 and Wayland, GNOME Shell also works on both.
   - Specifically, GNOME Shell is implemented as a plugin in Mutter.
 - GNOME Shell is the "shell" of the **GNOME desktop environment**. It was introduced to improve the stock GNOME environment. GNOME Shell being a Mutter plugin does however mean that the GNOME user experience is tighly coupled with Mutter, you can't swap out Mutter for another window manager without breaking GNOME.
