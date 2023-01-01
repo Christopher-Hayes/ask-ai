@@ -6,13 +6,17 @@ AskAI uses OpenAI's GPT-3 API to generate responses. Specifically, this extensio
 
 **Current Project State:** `Functioning Early Prototype`
 
-![Screenshot showing a question that was asked with the response from GPT-3 ai](./media/screenshot.png)
+![Video of an ai response appearing for a question asked](./media/demo.webp)
+
+![Shows a question that was asked with the response from GPT-3 ai](./media/screenshot.png)
 
 ## Prerequisite: OpenAI API Key
 
 AskAI needs an OpenAI API key to work. Anyone can create an OpenAI account and get an API key: [https://openai.com](https://openai.com/).
 
 While new accounts get $20 in credits, OpenAI will eventually start charging for usage. For personal usage GPT-3 should be cheap, usually fractions of a penny per a prompt. More information about pricing here: [https://openai.com/api/pricing/](https://openai.com/api/pricing/).
+
+![Shows the extension preferences, with the api key input field](./media/screenshot-pref.png)
 
 ## Installation
 
@@ -94,7 +98,8 @@ Here's the general dev flow:
 - GNOME Shell uses **Clutter** and **St** to build out the UI, this due to GNOME Shell being built on Mutter.
 - Something to note about Clutter is that [it is no longer part of the GNOME SDK](https://blogs.gnome.org/clutter/2022/02/16/retiring-clutter/). So for applications in the GNOME desktop environment, GTK should be used instead.
 - However, GNOME Shell can ONLY use Clutter and St. Gtk is only mentioned below because a couple utility functions are used. Gtk UIs cannot be built for GNOME Shell extensions.
-- This begs the question if Mutter is the reason GNOME Shell cannot use Gtk, how are GNOME desktop applications able to use Gtk? And the confusing answer is the GNOME desktop environment does not soley rely on Mutter as the window manage. GNOME Shell uses Mutter; however, the rest of GNOME uses gdm3 (GNOME Display Manager 3), and gdm3 supports Gtk. 
+- This begs the question if Mutter is the reason GNOME Shell cannot use Gtk, how are GNOME desktop applications able to use Gtk? And the confusing answer is the GNOME desktop environment does not soley rely on Mutter. GNOME Shell uses Mutter; however, the rest of GNOME uses gdm3 (GNOME Display Manager 3), and gdm3 supports Gtk. Additionally, Gtk expects to be used with a display server, meanwhile Mutter is just used as a compositor in GNOME Shell. So, even though Clutter and Gtk can *technically* be used together, in GNOME Shell it's not possible.
+- Having gnome shell launch a separate Gtk application seems to be an option though. So, might be worth looking into. In the meantime, this project sticks to Clutter and St.
 
 ### Libraries
 
