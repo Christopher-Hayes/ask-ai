@@ -6,7 +6,7 @@ AskAI uses OpenAI's GPT-3 API to generate responses. Specifically, this extensio
 
 **Current Project State:** `Functioning Early Prototype`
 
-![Video of an ai response appearing for a question asked](./media/demo.webp)
+![Video of an ai response appearing for a question asked](./media/demo-2.webp)
 
 ![Shows a question that was asked with the response from GPT-3 ai](./media/screenshot.png)
 
