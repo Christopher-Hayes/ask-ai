@@ -24,9 +24,7 @@ After completing one of the installation methods below, restart GNOME Shell (*X1
 
 ## Install From Source
 
-This method installs to your `~/.local/share/gnome-shell/extensions` directory from the latest source code on the `main` branch.
-
-First make sure you have the following dependencies installed:
+Make sure you have the following dependencies installed:
 
 | Arch Based     | Debian Based                  | Fedora                 |
 | ---            | ---                           | ---                    |
@@ -38,6 +36,15 @@ First make sure you have the following dependencies installed:
 |                | `libsoup3`                    |                        |
 
 Then run the following commands:
+
+```bash
+git clone https://github.com/christopher-hayes/ask-ai
+# Do not run this in ~/.local/share/gnome-shell/extensions. The extension will be moved their at build time.
+```
+
+```bash
+cd ask-ai
+```
 
 ```bash
 make && make install
@@ -53,7 +60,7 @@ make && make install
 
 ## TODO
 
-- [ ] Allow the response to be copied to the clipboard.
+- [x] Allow the response to be copied to the clipboard.
 - [ ] Add button to open settings from this extension.
 - [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
 
