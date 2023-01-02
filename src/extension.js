@@ -393,7 +393,14 @@ let AskAIMenuButton = GObject.registerClass(
         this._askAISubmitText.text = "Thinking";
 
         const key = this._settings.get_string("openai-key");
-        const queryText = this._askAIInputText.get_text();
+        let queryText = this._askAIInputText.get_text();
+        if (queryText === "" && (this._mode === AskAI.MODES.ASK || this._mode === AskAI.MODES.WRITE)) {
+          // If input is empty and in "ask" or "write" mode, use the placeholder text
+          queryText = this._askAIInput.get_hint_text();
+        } else if (queryText === "") {
+          throw new Error("Please enter a query.");
+        }
+
         const formattedQueryText =
           this._mode === "ask" || this._mode === "write"
             ? Util.formatPrompt(queryText)
@@ -577,13 +584,43 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
               "Best beach resorts in the Maldives",
               "How to make a chocolate cake with cream cheese frosting",
               "Average cost of a family trip to Disneyland",
-              "How to play the harmonica",
-              "Symptoms of a broken tailbone",
               "Best restaurants for Italian food in New York City",
-              "How to tie a bow tie",
               "How to clean a cast iron skillet",
-              "What is the best time to visit Machu Picchu"
-            ][Math.floor(Math.random() * 10)] ?? hintText;
+              "What is the best time to visit Machu Picchu",
+              "How to remove a stubborn stain from a wool suit",
+              "What is the highest mountain in the solar system?",
+              "What is the largest living organism in the world?",
+              "What is the longest river in the universe?",
+              "What is the oldest living animal on Earth?",
+              "What is the fastest land animal in the world?",
+              "What is the largest animal ever recorded?",
+              "What is the deepest point in the ocean?",
+              "What is the tallest building in the world?",
+              "What is the largest desert in the world?",
+              "What is the longest animal migration on Earth?",
+              "What is the smallest mammal in the world?",
+              "What is the most venomous snake in the world?",
+              "What is the longest lasting insect?",
+              "What is the highest waterfall in the world?",
+              "What is the largest and most powerful tornado ever recorded?",
+              "What is the longest flight of a chicken?",
+              "What is the largest volcano in the solar system?",
+              "What is the highest wind speed ever recorded?",
+              "What is the largest snowflake ever recorded?",
+              "What is the longest snake ever recorded?",
+              "How to fix a leaky faucet?",
+              "What is the best budget smartphone?",
+              "How to get rid of ants in the house?",
+              "What is the average salary for a software developer?",
+              "How to cook the perfect steak?",
+              "What are the top tourist destinations in Europe?",
+              "How to train for a marathon?",
+              "What are the best budget laptops?",
+              "How to get more protein in your diet?",
+              "What is the average cost of a wedding?",
+              "How to create a budget plan?",
+              "What are the best online schools for a degree in computer science?"
+            ][Math.floor(Math.random() * 40)];
           break;
         case AskAI.MODES.SUMMARIZE:
           hintText = "Paste text here to get summary";
@@ -593,22 +630,29 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
             "Paste text here to get an edited version with spelling and grammar corrections as well as word choice improvements.";
           break;
         case AskAI.MODES.WRITE:
-          hintText = [
-            "The power of music in culture and society",
-            "Exploring the concept of dreams",
-            "The effects of technology on our lives",
-            "The changing face of education",
-            "Exploring the history of photography",
-            "The impact of social media",
-            "Exploring the power of art",
-            "The importance of self-care",
-            "The challenges of living with a disability",
-            "Exploring the meaning of life",
-            "The importance of family",
-            "Exploring the concept of love",
-            "Exploring the concept of happiness",
-            "The importance of kindness"
-          ][Math.floor(Math.random() * 14)] ?? hintText;
+          hintText =
+            [
+              "Time travel to ancient civilizations.",
+              "Solving a string of burglaries.",
+              "Discovering a new animal species.",
+              "Surviving as the last person on Earth.",
+              "Haunted house ghost story.",
+              "Giant insect transformation.",
+              "Superhero controlling the weather.",
+              "Designing a theme park.",
+              "Pirate treasure hunt.",
+              "Farming in a plantless world.",
+              "Choose-your-own-adventure decisions.",
+              "Granting three genie wishes.",
+              "Mad scientist world domination.",
+              "Surviving in a dystopian society.",
+              "Completing a fantasy quest.",
+              "Escaping a horror story monster.",
+              "Romance novel love story.",
+              "Solving a mystery crime.",
+              "Surviving in a sci-fi world.",
+              "Playing a role in historical events.",
+            ][Math.floor(Math.random() * 20)] ?? hintText;
           break;
       }
 
