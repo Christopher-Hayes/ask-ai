@@ -58,6 +58,7 @@ make && make install
 - [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
 - [ ] Add a "history" of prompts/responses.
 - [ ] Switch to Typescript with intermediate build step.
+- [ ] Internationalization. (Translations, currencies, RTL)
 
 ## Development
 

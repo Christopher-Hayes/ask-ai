@@ -5,9 +5,30 @@ const Gettext = imports.gettext.domain(Me.metadata["gettext-domain"]);
 const _ = Gettext.gettext;
 const Main = imports.ui.main;
 
+// Using var here because MODES is used in other files
+// > Any symbols to be exported from a module must be defined with 'var'.
+var MODES = {
+  ASK: 0,
+  SUMMARIZE: 1,
+  EDIT: 2,
+  WRITE: 3,
+};
+
 // Make AI request to OpenAI's GPT-3 API
-async function makeAIRequest(prompt, key) {
+async function makeAIRequest(prompt, key, mode) {
   const openaiUrl = "https://api.openai.com/v1/completions";
+
+  switch (mode) {
+    case MODES.SUMMARIZE:
+      prompt = `Summarize the following:\n${prompt}`;
+      break;
+    case MODES.EDIT:
+      prompt = `Correct grammar and spelling, as well as reword any confusing sentences in the following:\n${prompt}`;
+      break;
+    case MODES.WRITE:
+      prompt = `Write about the following:\n${prompt}`;
+      break;
+  }
 
   // POST payload
   let params = {

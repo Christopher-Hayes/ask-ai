@@ -43,11 +43,29 @@ Main Styles
 }
 
 /** Header ------------------------------------------------------------------ */
+.header {
+	margin-bottom: 10px;
+}
 .heading {
-	margin-bottom: 12px;
-	margin-left: 6px;
+	margin: 0 20px 0 6px;
+	padding: 4px 0;
 	font-size: 18px;
 	font-weight: bold;
+}
+.ask-mode, .summarize-mode, .edit-mode, .write-mode {
+	background-color: #d3d3d3;
+	color: #333;
+	padding: 4px 2px;
+}
+.ask-mode {
+	border-radius: 8px 0 0 8px;
+}
+.write-mode {
+	border-radius: 0 8px 8px 0;
+}
+.ask-mode.active, .summarize-mode.active, .edit-mode.active, .write-mode.active {
+	background-color: #4d4dff;
+	color: #fff;
 }
 
 /** Input section ----------------------------------------------------------- */
