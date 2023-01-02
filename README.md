@@ -1,6 +1,6 @@
 # Ask AI
 
-Get AI-powered explanations instantly in your GNOME Shell.
+Get AI-powered explanations instantly in GNOME.
 
 AskAI uses OpenAI's GPT-3 API to generate responses. Specifically, this extension uses GPT-3 Davinci v3, OpenAI's most powerful model (and the same one behind "ChatGPT"). This GNOME extension is set up with a `CTRL + SHIFT + Y` shortcut to open the AskAI window.
 
@@ -56,6 +56,8 @@ make && make install
 - [x] Allow the response to be copied to the clipboard.
 - [ ] Add button to open settings from this extension.
 - [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
+- [ ] Add a "history" of prompts/responses.
+- [ ] Switch to Typescript with intermediate build step.
 
 ## Development
 
@@ -103,17 +105,17 @@ Here's the general dev flow:
 
 ### Libraries
 
-- `Clutter`: is a 2D graphics library that is used by GNOME Shell to draw the UI. [Official Clutter Docs](https://gnome.pages.gitlab.gnome.org/mutter/clutter/)
+- `Clutter`: 2D graphics library that is used by GNOME Shell to draw the UI. [Official Clutter Docs](https://gnome.pages.gitlab.gnome.org/mutter/clutter/)
   - Note that while GNOME Shell extension development can keep using Clutter without issue, .
-- `St`: is a library for creating graphical user interfaces. [Official St docs](https://gjs-docs.gnome.org/st10/)
-- `Gio`: is a library for input/output and networking. It is used by GNOME Shell to read and write files, and to communicate with the network. [Offical Gio docs](https://gjs-docs.gnome.org/gio20~2.0/)
-- `GLib`: is a library for common tasks such as data structures, file manipulation, and string manipulation. [Official GLib docs](https://gjs-docs.gnome.org/glib20~2.0/)
-- `GObject`: is a library for object-oriented programming. [Official GObject docs](https://gjs-docs.gnome.org/gobject20~2.0/)
-- `Meta`: is a library for the window manager. [Official Meta docs](https://gjs-docs.gnome.org/meta11~11/)
-- `Pango`: is a library for text layout and rendering. [Official Pango docs](https://gjs-docs.gnome.org/pango10~1.0/)
-- `Shell`: is a library for the GNOME Shell. [Official Shell docs](https://gjs-docs.gnome.org/shell01~0.1/)
-- `libsoup3`: is a library for HTTP requests. [Official libsoup3 docs](https://gjs-docs.gnome.org/libsoup3~3.0/)
-- `Gtk`: is a library for creating graphical user interfaces. Note - GNOME Shell only uses Gtk utility functions. The UI cannot be built with Gtk. [Official Gtk docs](https://gjs-docs.gnome.org/gtk30~3.0/)
+- `St`: Creating graphical user interfaces. [Official St docs](https://gjs-docs.gnome.org/st10/)
+- `Gio`: Input/output and networking. It is used by GNOME Shell to read and write files, and to communicate with the network. [Offical Gio docs](https://gjs-docs.gnome.org/gio20~2.0/)
+- `GLib`: Common tasks such as data structures, file manipulation, and string manipulation. [Official GLib docs](https://gjs-docs.gnome.org/glib20~2.0/)
+- `GObject`: Object-oriented programming. [Official GObject docs](https://gjs-docs.gnome.org/gobject20~2.0/)
+- `Meta`: Window manager. [Official Meta docs](https://gjs-docs.gnome.org/meta11~11/)
+- `Pango`: Text layout and rendering. [Official Pango docs](https://gjs-docs.gnome.org/pango10~1.0/)
+- `Shell`: GNOME Shell. [Official Shell docs](https://gjs-docs.gnome.org/shell01~0.1/)
+- `libsoup3`: HTTP requests. [Official libsoup3 docs](https://gjs-docs.gnome.org/libsoup3~3.0/)
+- `Gtk`: Note - GNOME Shell only uses Gtk utility functions. The UI cannot be built with Gtk. [Official Gtk docs](https://gjs-docs.gnome.org/gtk30~3.0/)
 
 ## Credits
 

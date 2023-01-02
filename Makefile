@@ -3,10 +3,10 @@
 PKG_NAME = gnome-shell-extension-ask-ai
 UUID = ask-ai@hayes.software
 BASE_MODULES = metadata.json
-SRC_MODULES = extension.js askai.js prefs.js stylesheet.css
+SRC_MODULES = extension.js askai.js util.js prefs.js stylesheet.css
 PREFS_MODULES = generalPage.js layoutPage.js aboutPage.js
 EXTRA_DIRECTORIES = media
-TOLOCALIZE = $(addprefix src/, extension.js askai.js prefs.js) \
+TOLOCALIZE = $(addprefix src/, extension.js askai.js util.js prefs.js) \
              $(addprefix src/preferences/, $(PREFS_MODULES)) \
              schemas/org.gnome.shell.extensions.ask-ai.gschema.xml
 

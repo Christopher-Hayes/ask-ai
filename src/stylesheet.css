@@ -1,12 +1,14 @@
 /*
 Main Styles
 - CSS vars are apparently not supported.
-- Element naming convention: loosely BEM
+- Element naming convention: loosely BEM (https://getbem.com/naming/)
 - Theming was an experiment. For now, just assume light theme is used.
 
 /** Common ------------------------------------------------------------------ */
 .btn {
+	/* Allow GJS to set the background color
 	background-color: #4d4dff;
+	*/
 	border-radius: 5px;
 	padding: 8px 10px;
 }
@@ -16,7 +18,7 @@ Main Styles
 .main.dark .btn {
 	color: #000;
 }
-.btn_text {
+.btn__text {
 	font-weight: bold;
 	text-align: center;
 }
@@ -116,7 +118,7 @@ Main Styles
 	background-color: #b30000;
 	margin-bottom: 10px;
 }
-.btn_text.warning-button_text {
+.btn__text.warning-button__text {
 	color: #fff;
 	font-size: 14px;
 }

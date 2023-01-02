@@ -1,4 +1,16 @@
-const { Clutter, Gio, Gtk, GLib, GObject, Meta, Pango, Shell, St } = imports.gi;
+const {
+  Clutter, // Docs - https://gjs-docs.gnome.org/clutter10
+  St, // Docs - https://gjs-docs.gnome.org/st10
+  Gio, // Docs - https://gjs-docs.gnome.org/gio20
+  Gtk, // Docs - https://gjs-docs.gnome.org/gtk40
+  GLib, // Docs - https://gjs-docs.gnome.org/glib20
+  GObject, // Docs - https://gjs-docs.gnome.org/gobject20
+  Meta, // Docs - https://gjs-docs.gnome.org/meta10
+  Pango, // Docs - https://gjs-docs.gnome.org/pango10
+  Shell, // Docs - https://gjs-docs.gnome.org/shell01
+  // Docs tip: You can search across multiple libraries if you go to https://gjs-docs.gnome.org,
+  // and click "Enable" on each library you want to search across.
+} = imports.gi;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -8,6 +20,7 @@ const GnomeSession = imports.misc.gnomeSession;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const AskAI = Me.imports.askai;
+const Util = Me.imports.util;
 const Gettext = imports.gettext.domain(Me.metadata["gettext-domain"]);
 const _ = Gettext.gettext;
 
@@ -31,35 +44,20 @@ let AskAIMenuButton = GObject.registerClass(
     _init() {
       super._init(0, "AskAIMenuButton", false);
 
-      // Theming
-      this._theme = 'light';
+      // Theming (Experimental - Not using this right now)
+      this._theme = "light";
 
-      // Setup network things
+      // Keep track of pending requests
       this._waitingForResponse = false;
 
       // Topbar icon
-      this._askAIIcon = new St.Icon({
-        icon_name: "view-refresh-symbolic",
-        style_class: "system-status-icon icon",
-      });
-      this._askAIIcon.set_gicon(
-        Gio.icon_new_for_string(Me.path + "/media/ask-ai-icon.svg")
-      );
-      let topBox = new St.BoxLayout({
-        style_class: "panel-status-menu-box",
-      });
-      topBox.add_child(this._askAIIcon);
-      this.add_child(topBox);
-
-      if (Main.panel._menus === undefined)
-        Main.panel.menuManager.addMenu(this.menu);
-      else Main.panel._menus.addMenu(this.menu);
+      this.setupTopBarIcon();
 
       // Load settings
       this.loadConfig();
       this.loadConfigInterface();
 
-      // Setup keybinding
+      // Set keybinding
       this._keybinding = Main.wm.addKeybinding(
         "ask-ai-shortcut",
         this._settings,
@@ -84,7 +82,7 @@ let AskAIMenuButton = GObject.registerClass(
       // Bind signals
       this.menu.connect("open-state-changed", this.recalcLayout.bind(this));
 
-      // Menu UI
+      // Main UI that shows when topbar icon is clicked
       this.checkPositionInPanel();
       this._askAI = new PopupMenu.PopupBaseMenuItem({
         reactive: false,
@@ -130,6 +128,31 @@ let AskAIMenuButton = GObject.registerClass(
       }
     }
 
+    // The AskAI icon button in the top bar
+    setupTopBarIcon() {
+      this._askAIIcon = new St.Icon({
+        icon_name: "view-refresh-symbolic",
+        style_class: "system-status-icon icon",
+      });
+
+      this._askAIIcon.set_gicon(
+        Gio.icon_new_for_string(Me.path + "/media/ask-ai-icon.svg")
+      );
+
+      const topBox = new St.BoxLayout({
+        style_class: "panel-status-menu-box",
+      });
+
+      topBox.add_child(this._askAIIcon);
+      this.add_child(topBox);
+
+      if (Main.panel._menus === undefined) {
+        Main.panel.menuManager.addMenu(this.menu);
+      } else {
+        Main.panel._menus.addMenu(this.menu);
+      }
+    }
+
     // Not used, but the capability is there
     // Reasons - Can't seem to get around the white popup border, and probably should leave theming to GNOME anyways
     updateTheme(newTheme) {
@@ -137,7 +160,7 @@ let AskAIMenuButton = GObject.registerClass(
       this._askAI.set_style_class_name(`main ${this._theme}`);
     }
     toggleTheme() {
-      this._theme = this._theme === 'light' ? 'dark' : 'light';
+      this._theme = this._theme === "light" ? "dark" : "light";
       this.updateTheme(this._theme);
     }
 
@@ -256,6 +279,7 @@ let AskAIMenuButton = GObject.registerClass(
       return this._settings.get_double("menu-alignment");
     }
 
+    // TODO: Not currently used, but should start building components like this
     createButton(iconName, accessibleName) {
       let button;
 
@@ -367,17 +391,17 @@ let AskAIMenuButton = GObject.registerClass(
 
         const key = this._settings.get_string("openai-key");
         const queryText = this._askAIInput.text;
-        const formattedQueryText = AskAI.formatPrompt(queryText);
+        const formattedQueryText = Util.formatPrompt(queryText);
 
-        // Update input text field with formatted query
-        this._askAIInput.text = formattedQueryText;
+        // Update input text field with formatted query (but ignore newlines)
+        this._askAIInput.text = formattedQueryText.replace(/(\n|\r)/gm, "");
 
         const result = await AskAI.makeAIRequest(formattedQueryText, key);
         if (!result) {
           throw new Error("Request failed. Double-check your API key.");
         }
         this._resultText = result.text;
-        this._pangoMarkup = AskAI.formatMarkdownToMarkup(this._resultText);
+        this._pangoMarkup = Util.formatMarkdownToMarkup(this._resultText);
 
         this._todaysTokenUsage += result.usage.total_tokens;
         // Calculated at $0.02 per 1000 tokens for the Davinci model - https://openai.com/api/pricing/
@@ -439,80 +463,80 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
     // Show a warning if the user has not set the OpenAI key
     showNoKeyWarning(content) {
-        const warningContainer = new St.BoxLayout({
-          vertical: true,
-          x_expand: true,
-          y_expand: true,
-          style_class: "warning-container",
-          width: 400,
-        });
+      const warningContainer = new St.BoxLayout({
+        vertical: true,
+        x_expand: true,
+        y_expand: true,
+        style_class: "warning-container",
+        width: 400,
+      });
 
-        const warningText = new St.Label({
-          text: "No OpenAI key set. Please set one in the extension settings. When you create an OpenAI account, you can make an API key in your account settings: https://beta.openai.com/account/api-keys",
-          style_class: "warning-text",
-        });
-        warningText.clutter_text.line_wrap = true;
-        warningText.clutter_text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
-        warningText.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-        warningText.clutter_text.reactive = true;
-        warningText.clutter_text.selectable = true;
-        warningText.clutter_text.set_selection_color(
-          new Clutter.Color({
-            red: 0xff,
-            green: 0xff,
-            blue: 0xff,
-            alpha: 0xff,
-          })
-        );
-        // If Ctrl + C is pressed, copy the selected text to the clipboard
-        warningText.clutter_text.connect("key-press-event", (actor, event) => {
-          if (event.get_state() & Clutter.ModifierType.CONTROL_MASK) {
-            if (event.get_key_symbol() == Clutter.KEY_c) {
-              St.Clipboard.get_default().set_text(
-                St.ClipboardType.CLIPBOARD,
-                warningText.clutter_text.get_selection()
-              );
-            }
+      const warningText = new St.Label({
+        text: "No OpenAI key set. Please set one in the extension settings. When you create an OpenAI account, you can make an API key in your account settings: https://beta.openai.com/account/api-keys",
+        style_class: "warning-text",
+      });
+      warningText.clutter_text.line_wrap = true;
+      warningText.clutter_text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+      warningText.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+      warningText.clutter_text.reactive = true;
+      warningText.clutter_text.selectable = true;
+      warningText.clutter_text.set_selection_color(
+        new Clutter.Color({
+          red: 0xff,
+          green: 0xff,
+          blue: 0xff,
+          alpha: 0xff,
+        })
+      );
+      // If Ctrl + C is pressed, copy the selected text to the clipboard
+      warningText.clutter_text.connect("key-press-event", (actor, event) => {
+        if (event.get_state() & Clutter.ModifierType.CONTROL_MASK) {
+          if (event.get_key_symbol() == Clutter.KEY_c) {
+            St.Clipboard.get_default().set_text(
+              St.ClipboardType.CLIPBOARD,
+              warningText.clutter_text.get_selection()
+            );
           }
-        });
+        }
+      });
 
-        warningContainer.add_child(warningText);
+      warningContainer.add_child(warningText);
 
-        const openSettingsButton = new St.Button({
-          style_class: "btn warning-button",
-          can_focus: true,
-          y_align: Clutter.ActorAlign.CENTER,
-          x_align: Clutter.ActorAlign.END,
-          track_hover: true,
-          width: 100,
-        });
+      const openSettingsButton = new St.Button({
+        style_class: "btn warning-button",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
+        track_hover: true,
+        width: 100,
+      });
 
-        // set text on button
-        const openSettingsButtonText = new St.Label({
-          text: _("Open Settings"),
-          style_class: "btn_text warning-button_text",
-          x_align: Clutter.ActorAlign.CENTER,
-        });
+      // set text on button
+      const openSettingsButtonText = new St.Label({
+        text: _("Open Settings"),
+        style_class: "btn__text warning-button__text",
+        x_align: Clutter.ActorAlign.CENTER,
+      });
 
-        openSettingsButton.set_child(openSettingsButtonText);
-        openSettingsButton.connect("clicked", () => {
-          ExtensionUtils.openPrefs();
-        });
+      openSettingsButton.set_child(openSettingsButtonText);
+      openSettingsButton.connect("clicked", () => {
+        ExtensionUtils.openPrefs();
+      });
 
-        const settingsButtonContainer = new St.BoxLayout({
-          vertical: false,
-          x_expand: true,
-          y_expand: true,
-          style_class: "settings-button-container",
-        });
+      const settingsButtonContainer = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_expand: true,
+        style_class: "settings-button-container",
+      });
 
-        settingsButtonContainer.add_actor(openSettingsButton);
+      settingsButtonContainer.add_actor(openSettingsButton);
 
-        content.add_actor(warningContainer);
-        content.add_actor(settingsButtonContainer);
+      content.add_actor(warningContainer);
+      content.add_actor(settingsButtonContainer);
 
-        // If the key gets set, hide the warning message
-        /* loadConfig() has a setting listener that should rebuild the UI? Doesn't quite seem to work though.
+      // If the key gets set, hide the warning message
+      /* loadConfig() has a setting listener that should rebuild the UI? Doesn't quite seem to work though.
         this._settings.connect("changed", () => {
           if (this._settings.get_string("openai-key") !== "") {
             warningContainer.hide();
@@ -587,7 +611,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       // set text on button
       this._askAISubmitText = new St.Label({
         text: _("Ask"),
-        style_class: "btn_text submit_text",
+        style_class: "btn__text submit__text",
         x_align: Clutter.ActorAlign.CENTER,
       });
 
@@ -691,7 +715,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       // set text on button
       this._askAICopyText = new St.Label({
         text: _("Copy"),
-        style_class: "btn_text copy_text",
+        style_class: "btn__text copy__text",
         x_align: Clutter.ActorAlign.CENTER,
       });
 
@@ -707,30 +731,24 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
               this._resultText
             );
             // Set copy button background a muted shade of green and change text to "Copied!". Then change it back after 2 seconds
+            this._askAICopyText.text = _("Copied!");
+            this._askAICopy.background_color = new Clutter.Color({
+              red: 0x4d,
+              green: 0xff,
+              blue: 0x4d,
+              alpha: 0xff,
+            });
             this._askAICopy.ease({
               background_color: new Clutter.Color({
                 red: 0x4d,
-                green: 0xff,
-                blue: 0x4d,
+                green: 0x4d,
+                blue: 0xff,
                 alpha: 0xff,
               }),
-              duration: 250,
+              duration: 2000,
               mode: Clutter.AnimationMode.LINEAR,
               onComplete: () => {
-                this._askAICopyText.text = _("Copied!");
-                this._askAICopy.ease({
-                  background_color: new Clutter.Color({
-                    red: 0x4d,
-                    green: 0x4d,
-                    blue: 0xff,
-                    alpha: 0xff,
-                  }),
-                  duration: 2000,
-                  mode: Clutter.AnimationMode.LINEAR,
-                  onComplete: () => {
-                    this._askAICopyText.text = _("Copy");
-                  },
-                });
+                this._askAICopyText.text = _("Copy");
               },
             });
           } else {
