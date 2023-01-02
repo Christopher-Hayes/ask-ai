@@ -12,21 +12,25 @@ const {
   // and click "Enable" on each library you want to search across.
 } = imports.gi;
 
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const GnomeSession = imports.misc.gnomeSession;
-
-const ExtensionUtils = imports.misc.extensionUtils;
+// GNOME Shell extension utilities
+const Main = imports.ui.main; // src - https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/main.js
+const PanelMenu = imports.ui.panelMenu; // src - https://gitlab.gnome.org/GNOME/gnome-shell/blob/main/js/ui/panelMenu.js
+const PopupMenu = imports.ui.popupMenu; // src - https://gitlab.gnome.org/GNOME/gnome-shell/blob/main/js/ui/popupMenu.js
+const GnomeSession = imports.misc.gnomeSession; // src - https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/misc/gnomeSession.js
+const ExtensionUtils = imports.misc.extensionUtils; // src - https://gitlab.gnome.org/GNOME/gnome-shell/blob/main/js/misc/extensionUtils.js
+const Util = imports.misc.util; // src - https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/misc/util.js
 const Me = ExtensionUtils.getCurrentExtension();
-const AskAI = Me.imports.askai;
-const Util = Me.imports.util;
+
+// Translations (not really used right now)
 const Gettext = imports.gettext.domain(Me.metadata["gettext-domain"]);
 const _ = Gettext.gettext;
 
+// Local scripts
+const AskAI = Me.imports.askai;
+const Helpers = Me.imports.helpers;
+
 let _firstBoot = 1;
 
-// enums
 const WIDGET_POSITION = {
   CENTER: 0,
   RIGHT: 1,
@@ -52,6 +56,19 @@ let AskAIMenuButton = GObject.registerClass(
       this._waitingForResponse = false;
       // UI mode - Ask, Summarize, Edit, Write
       this._mode = AskAI.MODES.ASK;
+      // Keep track of prompt and response for each mode
+      this._prompt = {
+        [AskAI.MODES.ASK]: "",
+        [AskAI.MODES.SUMMARIZE]: "",
+        [AskAI.MODES.EDIT]: "",
+        [AskAI.MODES.WRITE]: "",
+      };
+      this._response = {
+        [AskAI.MODES.ASK]: "",
+        [AskAI.MODES.SUMMARIZE]: "",
+        [AskAI.MODES.EDIT]: "",
+        [AskAI.MODES.WRITE]: "",
+      };
 
       // Topbar icon
       this.setupTopBarIcon();
@@ -394,7 +411,10 @@ let AskAIMenuButton = GObject.registerClass(
 
         const key = this._settings.get_string("openai-key");
         let queryText = this._askAIInputText.get_text();
-        if (queryText === "" && (this._mode === AskAI.MODES.ASK || this._mode === AskAI.MODES.WRITE)) {
+        if (
+          queryText === "" &&
+          (this._mode === AskAI.MODES.ASK || this._mode === AskAI.MODES.WRITE)
+        ) {
           // If input is empty and in "ask" or "write" mode, use the placeholder text
           queryText = this._askAIInput.get_hint_text();
         } else if (queryText === "") {
@@ -403,13 +423,17 @@ let AskAIMenuButton = GObject.registerClass(
 
         const formattedQueryText =
           this._mode === "ask" || this._mode === "write"
-            ? Util.formatPrompt(queryText)
+            ? Helpers.formatPrompt(queryText)
             : queryText;
 
-        // Update input text field with formatted query (but ignore newlines)
-        this._askAIInputText.set_text(
-          formattedQueryText.replace(/(\n|\r)/gm, "")
-        );
+        if (this._mode === "ask" || this._mode === "write") {
+          // Single-line input - remove newlines
+          this._prompt[this._mode] = formattedQueryText.replace(/(\n|\r)/gm, "");
+        } else {
+          this._prompt[this._mode] = formattedQueryText
+        }
+        // Update input text field with formatted query
+        this._askAIInputText.set_text(this._prompt[this._mode]);
 
         const result = await AskAI.makeAIRequest(
           formattedQueryText,
@@ -420,7 +444,8 @@ let AskAIMenuButton = GObject.registerClass(
           throw new Error("Request failed. Double-check your API key.");
         }
         this._resultText = result.text;
-        this._pangoMarkup = Util.formatMarkdownToMarkup(this._resultText);
+        this._pangoMarkup = Helpers.formatMarkdownToMarkup(this._resultText);
+        this._response[this._mode] = this._pangoMarkup;
 
         this._todaysTokenUsage += result.usage.total_tokens;
         // Calculated at $0.02 per 1000 tokens for the Davinci model - https://openai.com/api/pricing/
@@ -430,7 +455,7 @@ let AskAIMenuButton = GObject.registerClass(
 Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           4
         )}). Today's total: ${
-          this._todaysTokenUsage
+          this._todaysTokenUsage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") // Insert commas every 3 digits
         } (~$${approximateTotalCost.toFixed(4)})`;
 
         // Update UI - Response received
@@ -440,7 +465,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         // select all text in result
         this._askAIResultText.grab_key_focus();
         this._askAIResultText.set_selection(0, -1);
-        this._askAICopy.visible = true;
         this._waitingForResponse = false;
         this._askAIInfo.text = detailedInfo;
 
@@ -474,7 +498,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         // Show error
         this._askAIResult.text = "Error: " + e.message;
         this._askAIResult.visible = true;
-        this._askAICopy.visible = true;
         this._waitingForResponse = false;
         this._askAISubmitText.text = "Error";
       }
@@ -578,49 +601,48 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       switch (this._mode) {
         case AskAI.MODES.ASK:
           // Supply some fun example questions to ask
-          hintText =
-            [
-              "How to remove a stubborn stain from a wool suit",
-              "Best beach resorts in the Maldives",
-              "How to make a chocolate cake with cream cheese frosting",
-              "Average cost of a family trip to Disneyland",
-              "Best restaurants for Italian food in New York City",
-              "How to clean a cast iron skillet",
-              "What is the best time to visit Machu Picchu",
-              "How to remove a stubborn stain from a wool suit",
-              "What is the highest mountain in the solar system?",
-              "What is the largest living organism in the world?",
-              "What is the longest river in the universe?",
-              "What is the oldest living animal on Earth?",
-              "What is the fastest land animal in the world?",
-              "What is the largest animal ever recorded?",
-              "What is the deepest point in the ocean?",
-              "What is the tallest building in the world?",
-              "What is the largest desert in the world?",
-              "What is the longest animal migration on Earth?",
-              "What is the smallest mammal in the world?",
-              "What is the most venomous snake in the world?",
-              "What is the longest lasting insect?",
-              "What is the highest waterfall in the world?",
-              "What is the largest and most powerful tornado ever recorded?",
-              "What is the longest flight of a chicken?",
-              "What is the largest volcano in the solar system?",
-              "What is the highest wind speed ever recorded?",
-              "What is the largest snowflake ever recorded?",
-              "What is the longest snake ever recorded?",
-              "How to fix a leaky faucet?",
-              "What is the best budget smartphone?",
-              "How to get rid of ants in the house?",
-              "What is the average salary for a software developer?",
-              "How to cook the perfect steak?",
-              "What are the top tourist destinations in Europe?",
-              "How to train for a marathon?",
-              "What are the best budget laptops?",
-              "How to get more protein in your diet?",
-              "What is the average cost of a wedding?",
-              "How to create a budget plan?",
-              "What are the best online schools for a degree in computer science?"
-            ][Math.floor(Math.random() * 40)];
+          hintText = [
+            "How to remove a stubborn stain from a wool suit",
+            "Best beach resorts in the Maldives",
+            "How to make a chocolate cake with cream cheese frosting",
+            "Average cost of a family trip to Disneyland",
+            "Best restaurants for Italian food in New York City",
+            "How to clean a cast iron skillet",
+            "What is the best time to visit Machu Picchu",
+            "How to remove a stubborn stain from a wool suit",
+            "What is the highest mountain in the solar system?",
+            "What is the largest living organism in the world?",
+            "What is the longest river in the universe?",
+            "What is the oldest living animal on Earth?",
+            "What is the fastest land animal in the world?",
+            "What is the largest animal ever recorded?",
+            "What is the deepest point in the ocean?",
+            "What is the tallest building in the world?",
+            "What is the largest desert in the world?",
+            "What is the longest animal migration on Earth?",
+            "What is the smallest mammal in the world?",
+            "What is the most venomous snake in the world?",
+            "What is the longest lasting insect?",
+            "What is the highest waterfall in the world?",
+            "What is the largest and most powerful tornado ever recorded?",
+            "What is the longest flight of a chicken?",
+            "What is the largest volcano in the solar system?",
+            "What is the highest wind speed ever recorded?",
+            "What is the largest snowflake ever recorded?",
+            "What is the longest snake ever recorded?",
+            "How to fix a leaky faucet?",
+            "What is the best budget smartphone?",
+            "How to get rid of ants in the house?",
+            "What is the average salary for a software developer?",
+            "How to cook the perfect steak?",
+            "What are the top tourist destinations in Europe?",
+            "How to train for a marathon?",
+            "What are the best budget laptops?",
+            "How to get more protein in your diet?",
+            "What is the average cost of a wedding?",
+            "How to create a budget plan?",
+            "What are the best online schools for a degree in computer science?",
+          ][Math.floor(Math.random() * 40)];
           break;
         case AskAI.MODES.SUMMARIZE:
           hintText = "Paste text here to get summary";
@@ -661,10 +683,11 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         this._mode === AskAI.MODES.EDIT ||
         this._mode === AskAI.MODES.SUMMARIZE
       ) {
-        const inputBorder = new St.Bin({
+        const inputBorder = new St.BoxLayout({
           x_expand: true,
           y_expand: true,
-          style_class: "input",
+          vertical: true,
+          style_class: "input-container input",
         });
 
         // TODO: Get scroll working.
@@ -678,6 +701,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           scroll_mode: Clutter.ScrollMode.VERTICALLY,
         });
 
+        // TODO: Put a St widget in here so padding can be only applied to text (and not bottom-bar)
         this._askAIInputText = new Clutter.Text({
           text: hintText,
           width: 400,
@@ -736,6 +760,44 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
         this._askAIInput.add_actor(this._askAIInputText);
         inputBorder.add_actor(this._askAIInput);
+
+        // Add bottom bar with horizontal box layout for buttons
+        const bottomBar = new St.BoxLayout({
+          vertical: false,
+          x_expand: true,
+          y_expand: true,
+          style_class: "bottom-bar",
+        });
+
+        // Create a button for copying the result to the clipboard
+        const useClipboard = new St.Button({
+          style_class: "btn use-clipboard",
+          can_focus: true,
+          y_align: Clutter.ActorAlign.CENTER,
+          track_hover: true,
+        });
+
+        // Set text on button
+        const useClipboardText = new St.Label({
+          text: "Use Clipboard",
+          style_class: "btn__text use-clipboard__text",
+          x_align: Clutter.ActorAlign.CENTER,
+        });
+
+        useClipboard.set_child(useClipboardText);
+
+        useClipboard.connect("clicked", () => {
+          St.Clipboard.get_default().get_text(
+            St.ClipboardType.CLIPBOARD,
+            (clipboard, text) => {
+              this._askAIInputText.set_text(text);
+            }
+          );
+        });
+
+        bottomBar.add_actor(useClipboard);
+        inputBorder.add_actor(bottomBar);
+
         inputContainer.add_actor(inputBorder);
         inputContainer.vertical = true;
       } else {
@@ -746,7 +808,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           y_expand: true,
           hint_text: hintText,
           track_hover: true,
-          width: 300,
+          width: 350,
         });
 
         this._askAIInputText = this._askAIInput.clutter_text;
@@ -761,60 +823,26 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         inputContainer.add_actor(this._askAIInput);
       }
 
+      // If previous prompt is in state, show it
+      if (this._prompt[this._mode]) {
+        this._askAIInputText.set_markup(this._prompt[this._mode]);
+        this._askAIInput.visible = true;
+      }
+
       // horizontal box layout for buttons
       const buttonContainer = new St.BoxLayout({
         vertical: false,
-        x_expand: true,
         y_expand: true,
+        x_expand: true,
         style_class: "button-container",
       });
-
-      // If the mode is "EDIT" or "SUMMARIZE", create a button for pasting the contents of the clipboard into the input field
-      if (
-        this._mode === AskAI.MODES.EDIT ||
-        this._mode === AskAI.MODES.SUMMARIZE
-      ) {
-        // Create button for getting the contents from the clipboard and pasting it into the input field
-        const useClipboard = new St.Button({
-          style_class: "btn clipboard",
-          can_focus: true,
-          y_align: Clutter.ActorAlign.CENTER,
-          track_hover: true,
-          background_color: new Clutter.Color({
-            red: 0x4d,
-            green: 0x4d,
-            blue: 0xff,
-            alpha: 0xff,
-          }),
-        });
-
-        // Set text on button
-        const clipboardText = new St.Label({
-          text: "Use Clipboard",
-          style_class: "btn__text clipboard__text",
-          x_align: Clutter.ActorAlign.CENTER,
-        });
-
-        useClipboard.set_child(clipboardText);
-
-        // If the button is clicked, get the text from the clipboard and paste it into the input field
-        useClipboard.connect("clicked", () => {
-          St.Clipboard.get_default().get_text(
-            St.ClipboardType.CLIPBOARD,
-            (clipboard, text) => {
-              this._askAIInputText.set_text(text);
-            }
-          );
-        });
-
-        buttonContainer.add_actor(useClipboard);
-      }
 
       // Create a button to submit the question to ask AI
       this._askAISubmit = new St.Button({
         style_class: "btn submit",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
         track_hover: true,
         width: 100,
         background_color: new Clutter.Color({
@@ -847,13 +875,21 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
     buildOutputUI() {
       // Use St.Bin
-      this._askAIResult = new St.Bin({
+      this._askAIResult = new St.BoxLayout({
         style_class: "result",
         x_expand: true,
         y_expand: true,
+        vertical: true,
         width: 500,
         // Hide the result until we get a response from ask AI
         visible: false,
+      });
+
+      const textContainer = new St.Bin({
+        style_class: "result__text-container",
+        x_expand: true,
+        y_expand: true,
+        width: 500,
       });
 
       this._askAIResultText = new Clutter.Text({
@@ -871,7 +907,8 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         reactive: true,
       });
 
-      this._askAIResult.set_child(this._askAIResultText);
+      this._askAIResult.add_actor(textContainer);
+      textContainer.set_child(this._askAIResultText);
 
       // Set selection color to a vibrant shade of a light green
       this._askAIResultText.selection_color = new Clutter.Color({
@@ -880,6 +917,12 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         blue: 0xd5,
         alpha: 0xff,
       });
+
+      // If previous response is in state, show it
+      if (this._response[this._mode]) {
+        this._askAIResultText.set_markup(this._response[this._mode]);
+        this._askAIResult.visible = true;
+      }
 
       // If Ctrl + C is pressed, copy the selected text to the clipboard
       this._askAIResultText.connect("key-press-event", (actor, event) => {
@@ -892,6 +935,160 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           }
         }
       });
+
+      // Add bottom bar with horizontal box layout for buttons
+      const bottomBar = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_expand: true,
+        style_class: "bottom-bar",
+      });
+
+      // Create a button for copying the result to the clipboard
+      const copyResult = new St.Button({
+        style_class: "btn copy",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        track_hover: true,
+      });
+
+      // Set text on button
+      const copyText = new St.Label({
+        text: "Copy All",
+        style_class: "btn__text copy__text",
+        x_align: Clutter.ActorAlign.CENTER,
+      });
+
+      copyResult.set_child(copyText);
+
+      // If the button is clicked, copy the result to the clipboard
+      copyResult.connect("clicked", () => {
+        St.Clipboard.get_default().set_text(
+          St.ClipboardType.CLIPBOARD,
+          this._askAIResultText.get_text()
+        );
+        // Change the text on the button to "Copied!" for 2 seconds
+        copyText.set_text("Copied!");
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+          copyText.set_text("Copy");
+          return GLib.SOURCE_REMOVE;
+        });
+      });
+
+      bottomBar.add_actor(copyResult);
+
+      // Create 2 buttons for opening the currently selected text in a browser. One button should go to google search and the other should go to wikipedia
+      const googleSearch = new St.Button({
+        style_class: "btn google",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        track_hover: true,
+        visible: false,
+      });
+
+      const googleText = new St.Label({
+        text: "Google",
+        style_class: "btn__text google__text",
+        x_align: Clutter.ActorAlign.CENTER,
+      });
+
+      googleSearch.set_child(googleText);
+
+      googleSearch.connect("clicked", () => {
+        try {
+          Util.trySpawnCommandLine(
+            `xdg-open 'https://www.google.com/search?q=${this._askAIResultText.get_selection()}'`
+          );
+        } catch (e) {
+          logError("Error opening google search", e);
+        }
+      });
+
+      bottomBar.add_actor(googleSearch);
+
+      const wikiSearch = new St.Button({
+        style_class: "btn wiki",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        track_hover: true,
+        reactive: true,
+        visible: false,
+      });
+
+      const wikiText = new St.Label({
+        text: "Wikipedia",
+        style_class: "btn__text wiki__text",
+        x_align: Clutter.ActorAlign.CENTER,
+      });
+
+      wikiSearch.set_child(wikiText);
+
+      wikiSearch.connect("clicked", () => {
+        try {
+          Util.trySpawnCommandLine(
+            `xdg-open 'https://en.wikipedia.org/w/index.php?search=${this._askAIResultText.get_selection()}'`
+          );
+        } catch (e) {
+          logError("Error opening wikipedia search", e);
+        }
+      });
+
+      bottomBar.add_actor(wikiSearch);
+
+      // Add button to ask ai
+      const askAIButton = new St.Button({
+        style_class: "btn ask-ai",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        track_hover: true,
+        visible: false,
+        reactive: true,
+      });
+
+      const askAIText = new St.Label({
+        text: "Ask AI",
+        style_class: "btn__text ask-ai__text",
+        x_align: Clutter.ActorAlign.CENTER,
+      });
+
+      askAIButton.set_child(askAIText);
+
+      askAIButton.connect("clicked", () => {
+        this._askAIInputText.set_text(`Describe ${this._askAIResultText.get_selection()}`);
+        this.makeAIRequest();
+        askAIText.set_text("Thinking...");
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+          askAIText.set_text("Ask AI");
+          return GLib.SOURCE_REMOVE;
+        })
+      });
+
+      bottomBar.add_actor(askAIButton);
+
+      // If the user selects text, show the google, wikipedia, and ask-ai buttons
+      this._askAIResultText.connect("cursor-changed", () => {
+        if (this._askAIResultText.get_selection() != "") {
+          googleSearch.visible = true;
+          wikiSearch.visible = true;
+          askAIButton.visible = true;
+        } else {
+          googleSearch.visible = false;
+          wikiSearch.visible = false;
+          askAIButton.visible = false;
+        }
+      });
+
+      // If the Clutter.Text loses focus, hide the google and wikipedia buttons
+      this._askAIResultText.connect("key-focus-out", () => {
+        // delay by 500ms - this is to prevent the buttons from disappearing when the user clicks on them
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+          googleSearch.visible = false;
+          wikiSearch.visible = false;
+          askAIButton.visible = false;
+        });
+      });
+
+      this._askAIResult.add_actor(bottomBar);
 
       return this._askAIResult;
     }
@@ -917,101 +1114,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         x_expand: true,
       });
 
-      // Create a button for copying the response from ask AI called "Copy"
-      this._askAICopy = new St.Button({
-        style_class: "btn copy",
-        can_focus: true,
-        y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.END,
-        track_hover: true,
-        width: 100,
-        background_color: new Clutter.Color({
-          red: 0x4d,
-          green: 0x4d,
-          blue: 0xff,
-          alpha: 0xff,
-        }),
-        // Hide the result until we get a response from ask AI
-        visible: false,
-      });
-
-      // set text on button
-      this._askAICopyText = new St.Label({
-        text: _("Copy"),
-        style_class: "btn__text copy__text",
-        x_align: Clutter.ActorAlign.CENTER,
-      });
-
-      this._askAICopy.set_child(this._askAICopyText);
-
-      // If copy button is clicked
-      this._askAICopy.connect("clicked", () => {
-        // Copy the response from ask AI to the clipboard
-        try {
-          if (this._resultText) {
-            St.Clipboard.get_default().set_text(
-              St.ClipboardType.CLIPBOARD,
-              this._resultText
-            );
-            // Set copy button background a muted shade of green and change text to "Copied!". Then change it back after 2 seconds
-            this._askAICopyText.text = _("Copied!");
-            this._askAICopy.background_color = new Clutter.Color({
-              red: 0x4d,
-              green: 0xff,
-              blue: 0x4d,
-              alpha: 0xff,
-            });
-            this._askAICopy.ease({
-              background_color: new Clutter.Color({
-                red: 0x4d,
-                green: 0x4d,
-                blue: 0xff,
-                alpha: 0xff,
-              }),
-              duration: 2000,
-              mode: Clutter.AnimationMode.LINEAR,
-              onComplete: () => {
-                this._askAICopyText.text = _("Copy");
-              },
-            });
-          } else {
-            // Failed to copy to clipboard, throw an error
-            throw new Error("Failed to copy to clipboard");
-          }
-        } catch (e) {
-          // If copying to clipboard failed, show a notification
-          Main.notifyError(_("Failed to copy to clipboard"), e.message);
-          // Make copy button background a muted shade of red and change text to "Failed". Then change it back after 2 seconds
-          this._askAICopy.ease({
-            background_color: new Clutter.Color({
-              red: 0xff,
-              green: 0x4d,
-              blue: 0x4d,
-              alpha: 0xff,
-            }),
-            duration: 250,
-            mode: Clutter.AnimationMode.LINEAR,
-            onComplete: () => {
-              this._askAICopyText.text = _("Failed");
-              this._askAICopy.ease({
-                background_color: new Clutter.Color({
-                  red: 0x4d,
-                  green: 0x4d,
-                  blue: 0xff,
-                  alpha: 0xff,
-                }),
-                duration: 2000,
-                mode: Clutter.AnimationMode.LINEAR,
-                onComplete: () => {
-                  this._askAICopyText.text = _("Copy");
-                },
-              });
-            },
-          });
-        }
-      });
-
-      footerContainer.add(this._askAICopy);
       footerContainer.add(this._askAIInfo);
       return footerContainer;
     }
@@ -1060,6 +1162,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       let heading = new St.Label({
         text: _("Ask AI"),
         style_class: "heading",
+        y_align: Clutter.ActorAlign.CENTER,
       });
 
       // Add UI for switching between the different modes (Ask, Summarize, Edit, Write). Should be horizontal
@@ -1075,6 +1178,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         x_expand: false,
         y_expand: true,
         style_class: "modes",
+        x_align: Clutter.ActorAlign.END,
       });
       modesParent.add(modes);
 
@@ -1085,7 +1189,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
         track_hover: true,
-        width: 100,
+        x_expand: false,
       });
 
       // Set text on button
@@ -1105,7 +1209,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
         track_hover: true,
-        width: 100,
       });
 
       // Set text on button
@@ -1125,7 +1228,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
         track_hover: true,
-        width: 100,
       });
 
       // Set text on button
@@ -1145,7 +1247,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
         track_hover: true,
-        width: 100,
       });
 
       // Set text on button

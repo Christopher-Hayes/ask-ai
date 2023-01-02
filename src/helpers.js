@@ -1,4 +1,5 @@
 //* Static utility functions
+// Named "helpers.js" to avoid confusion with the "Util" GNOME Shell module
 // formatPrompt(): Add punctuation to avoid AI trying to complete the question.
 // formatMarkdownToMarkup(): Replace AI repsonse markdown with Pango markup
 // http(): Make http request

@@ -54,8 +54,9 @@ make && make install
 ## TODO
 
 - [x] Allow the response to be copied to the clipboard.
+- [ ] Allow web search engine to be changed in preferences.
 - [ ] Add button to open settings from this extension.
-- [ ] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
+- [x] Support different "modes" for different types of usage. (ie summaries, text editing, etc)
 - [ ] Add a "history" of prompts/responses.
 - [ ] Switch to Typescript with intermediate build step.
 - [ ] Internationalization. (Translations, currencies, RTL)

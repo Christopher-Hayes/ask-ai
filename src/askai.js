@@ -1,6 +1,6 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Util = Me.imports.util;
+const Helpers = Me.imports.helpers;
 const Gettext = imports.gettext.domain(Me.metadata["gettext-domain"]);
 const _ = Gettext.gettext;
 const Main = imports.ui.main;
@@ -48,7 +48,7 @@ async function makeAIRequest(prompt, key, mode) {
 
   try {
     let start = new Date().getTime();
-    const json = await Util.http(openaiUrl, headers, "POST", params);
+    const json = await Helpers.http(openaiUrl, headers, "POST", params);
     let end = new Date().getTime();
     let time = end - start;
 
@@ -87,7 +87,7 @@ async function getTodaysUsage(key) {
     }-${today.getDate()}`;
     const url = `https://api.openai.com/v1/usage?date=${date}`;
 
-    const json = await Util.http(url, {
+    const json = await Helpers.http(url, {
         "Content-Type": "application/json",
         Authorization: "Bearer " + key,
       },

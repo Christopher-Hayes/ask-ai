@@ -9,14 +9,9 @@ Main Styles
 	/* Allow GJS to set the background color
 	background-color: #4d4dff;
 	*/
+	color: #fff;
 	border-radius: 5px;
 	padding: 8px 10px;
-}
-.main.light .btn {
-	color: #fff;
-}
-.main.dark .btn {
-	color: #000;
 }
 .btn__text {
 	font-weight: bold;
@@ -48,14 +43,18 @@ Main Styles
 }
 .heading {
 	margin: 0 20px 0 6px;
-	padding: 4px 0;
 	font-size: 18px;
 	font-weight: bold;
 }
 .ask-mode, .summarize-mode, .edit-mode, .write-mode {
 	background-color: #d3d3d3;
 	color: #333;
-	padding: 4px 2px;
+	padding: 8px 12px;
+}
+.ask-mode:hover, .summarize-mode:hover, .edit-mode:hover, .write-mode:hover,
+.ask-mode:focus, .summarize-mode:focus, .edit-mode:focus, .write-mode:focus {
+	background-color: #4d4dff;
+	color: #fff;
 }
 .ask-mode {
 	border-radius: 8px 0 0 8px;
@@ -73,26 +72,19 @@ Main Styles
 	margin-bottom: 10px;
 }
 .input {
-	border-radius: 5px;
+	border: 2px solid #d3d3d3;
+	border-radius: 5px 0 0 5px;
+	border-right: 0;
+	color: #000;
 	padding: 5px;
 }
-.main.light .input {
-	color: #000;
-	border: 2px solid #d3d3d3;
-}
-.main.dark .input {
-	color: #fff;
-	border: 2px solid #777;
-}
-.main.light .input:focus {
+.input:focus {
 	border: 2px solid #4d4dff;
 }
-.main.dark .input:focus {
-	border: 2px solid #4d4dff;
-}
-
 .submit {
-	margin-left: 12px;
+	border: 2px solid #4d4dff;
+	border-radius: 0 5px 5px 0;
+	border-left: 0;
 }
 
 /** AI response section ----------------------------------------------------- */
@@ -101,18 +93,35 @@ Main Styles
 	border-radius: 5px;
 	color: #000;
 	margin-top: 5px;
+}
+.result__text-container {
 	padding: 15px;
 }
-.result.dark {
+.bottom-bar {
+	background-color: #f2ffef;
 	color: #fff;
-	border: 2px solid #4d4dff;
+	padding: 8px 16px;
+	margin: 12px 0 0;
+}
+.bottom-bar .btn {
+	background-color: transparent;
+	border-radius: 5px;
+	color: #000;
+	margin-right: 12px;
+	padding: 4px 8px;
+	font-weight: normal;
+}
+.bottom-bar .btn:active {
+	background-color: #a5e4ae;
+	color: #000;
+}
+.bottom-bar .btn:hover,
+.bottom-bar .btn:focus {
+	background-color: #9cffab;
+	color: #000;
 }
 
 /** Footer ------------------------------------------------------------------ */
-.copy {
-	margin-top: 12px;
-	margin-right: 12px;
-}
 .info {
 	color: #777;
 	font-size: 12px;
