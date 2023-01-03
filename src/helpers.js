@@ -102,7 +102,7 @@ function http(url,
 
     // If POST, add data to request body
     if (method === "POST") {
-      _message.request_body.append(JSON.stringify(jsonData));
+      _message.set_request_body_from_bytes('application/json', ByteArray.fromString(JSON.stringify(jsonData)));
     }
 
     // Headers
