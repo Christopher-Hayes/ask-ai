@@ -50,8 +50,18 @@ let AskAIMenuButton = GObject.registerClass(
       super._init(0, "AskAIMenuButton", false);
 
       //* State
-      // Theming (Experimental - Not using this right now)
-      this._theme = "light";
+      // Is GNOME dark mode enabled?
+      const interfaceSettings = ExtensionUtils.getSettings(
+            'org.gnome.desktop.interface'
+          )
+      let theme = interfaceSettings.get_string('color-scheme');
+      this._darkTheme = theme === 'prefer-dark' || theme === 'true';
+      // when the interface color scheme changes, update the theme
+      interfaceSettings.connect('changed::color-scheme', () => {
+        theme = interfaceSettings.get_string('color-scheme');
+        this._darkTheme = theme === 'prefer-dark' || theme === 'true';
+        this._askAI.set_style_class_name(`main ${this._darkTheme ? 'dark' : 'light'}`);
+      });
       // Keep track of pending requests
       this._waitingForResponse = false;
       // UI mode - Ask, Summarize, Edit, Write
@@ -106,7 +116,7 @@ let AskAIMenuButton = GObject.registerClass(
       this.checkPositionInPanel();
       this._askAI = new PopupMenu.PopupBaseMenuItem({
         reactive: false,
-        style_class: `main ${this._theme}`,
+        style_class: `main ${this._darkTheme ? 'dark' : 'light'}`,
       });
 
       let _firstBootWait = this._startupDelay;
@@ -171,17 +181,6 @@ let AskAIMenuButton = GObject.registerClass(
       } else {
         Main.panel._menus.addMenu(this.menu);
       }
-    }
-
-    // Not used, but the capability is there
-    // Reasons - Can't seem to get around the white popup border, and probably should leave theming to GNOME anyways
-    updateTheme(newTheme) {
-      this._theme = newTheme;
-      this._askAI.set_style_class_name(`main ${this._theme}`);
-    }
-    toggleTheme() {
-      this._theme = this._theme === "light" ? "dark" : "light";
-      this.updateTheme(this._theme);
     }
 
     stop() {
@@ -713,12 +712,8 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           line_wrap: true,
           line_wrap_mode: Pango.WrapMode.WORD_CHAR,
           ellipsize: Pango.EllipsizeMode.NONE,
-          selection_color: new Clutter.Color({
-            red: 0xd2,
-            green: 0xff,
-            blue: 0xd5,
-            alpha: 0xff,
-          }),
+          selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 100) : Clutter.Color.new(0, 0, 0, 100),
+          color: this._darkTheme ? Clutter.Color.new(255, 255, 255, 255) : Clutter.Color.new(0, 0, 0, 255),
         });
 
         // When the user focuses the input, clear the placeholder text
@@ -905,18 +900,12 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         selectable: true,
         // Note - Reactive is essential for allowing the text to be selectable
         reactive: true,
+        selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 100) : Clutter.Color.new(0, 0, 0, 100),
+        color: this._darkTheme ? Clutter.Color.new(255, 255, 255, 255) : Clutter.Color.new(0, 0, 0, 255),
       });
 
       this._askAIResult.add_actor(textContainer);
       textContainer.set_child(this._askAIResultText);
-
-      // Set selection color to a vibrant shade of a light green
-      this._askAIResultText.selection_color = new Clutter.Color({
-        red: 0xd2,
-        green: 0xff,
-        blue: 0xd5,
-        alpha: 0xff,
-      });
 
       // If previous response is in state, show it
       if (this._response[this._mode]) {
