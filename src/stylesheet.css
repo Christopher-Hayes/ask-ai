@@ -2,7 +2,12 @@
 Main Styles
 - CSS vars are apparently not supported.
 - Element naming convention: loosely BEM (https://getbem.com/naming/)
-- Theming was an experiment. For now, just assume light theme is used.
+
+NOTE: This extension first tries to use the GNOME Shell built-in styles
+whenever possible, the styles in this file are for additional customization.
+If you're looking for a CSS class name that's not here, find the styles here:
+Yaru: https://github.com/ubuntu/yaru/blob/master/gnome-shell/src/gnome-shell-sass/_widgets.scss
+*/
 
 /** Common ------------------------------------------------------------------ */
 .btn {
@@ -58,16 +63,6 @@ Main Styles
 	border: 0px solid red;
 	outline: 0;
 }
-/*
-.main.light  {
-	color: #000;
-	background-color: #fff;
-}
-.main.dark {
-	color: #fff;
-	background-color: #000;
-}
-*/
 
 /** Header ------------------------------------------------------------------ */
 .header {
@@ -109,10 +104,14 @@ Main Styles
 	margin-bottom: 10px;
 }
 .input {
-	border: 2px solid #d3d3d3;
-	border-radius: 5px 0 0 5px;
-	border-right: 0;
-	padding: 5px;
+	border-radius: 99px 0 0 99px !important;
+	padding: 5px 5px 5px 10px;
+}
+/* multi-line editor: */
+.input-container.input {
+	border: 2px solid #4d4dff;
+	border-radius: 10px !important;
+	padding: 10px;
 }
 .main.dark .input {
 	color: #fff;
@@ -120,11 +119,12 @@ Main Styles
 .main.light .input {
 	color: #000;
 }
-.input:focus {
-	border: 2px solid #4d4dff;
-}
 .submit {
-	margin-left: 10px;
+	border-left: 0;
+	border-radius: 0 99px 99px 0;
+}
+.submit.submit--multi-line {
+	border-radius: 99px;
 }
 
 /** AI response section ----------------------------------------------------- */

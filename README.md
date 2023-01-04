@@ -4,15 +4,21 @@ Get AI-powered explanations instantly in GNOME.
 
 AskAI uses OpenAI's GPT-3 API to generate responses. Specifically, this extension uses GPT-3 Davinci v3, OpenAI's most powerful model (and the same one behind "ChatGPT"). This GNOME extension is set up with a `CTRL + SHIFT + Y` shortcut to open the AskAI window.
 
-**Current Project State:** `Functioning Early Prototype`
+**Current Project State:** Functioning Prototype - Requires building the extension from source. All "modes" work. "edit" and "write" need additional GUI options to be more useful.
 
-![Shows a question that was asked with the response from GPT-3 ai](./media/screenshot.png)
+![Shows a question that was asked](./media/screenshot-1.png)
+
+![Shows the response from GPT-3](./media/screenshot-2.png)
+
+![Show GPT-3 summarizing a passage](./media/screenshot-3.png)
 
 ## Prerequisite: OpenAI API Key
 
 AskAI needs an OpenAI API key to work. Anyone can create an OpenAI account and get an API key: [https://openai.com](https://openai.com/).
 
 While new accounts get $20 in credits, OpenAI will eventually start charging for usage. For personal usage GPT-3 should be cheap, usually fractions of a penny per a prompt. More information about pricing here: [https://openai.com/api/pricing/](https://openai.com/api/pricing/).
+
+Tokens/Usage Pricing - Note that asking a question will only use a couple hundred tokens, costing fractions of a penny. But, using "Summarize" or "Edit" on large passages can use thousands of tokens, costing 1-10 cents.
 
 ![Shows the extension preferences, with the api key input field](./media/screenshot-pref.png)
 
@@ -52,6 +58,7 @@ make && make install
 ## TODO
 
 - [x] Allow the response to be copied to the clipboard.
+- [ ] Estimate how many tokens a prompt will use and warn before using a large number of tokens.
 - [ ] Allow web search engine to be changed in preferences.
 - [ ] Add button to open settings from this extension.
 - [x] Support different "modes" for different types of usage. (ie summaries, text editing, etc)

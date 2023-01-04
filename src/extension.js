@@ -37,20 +37,6 @@ const WIDGET_POSITION = {
   LEFT: 2,
 };
 
-// Yaru theme colors
-// const YaruColors = {
-//   bark: {
-//     primary: "#5b5b43",
-//     'primary-light': "#787859",
-//   },
-//   'bark-dark': {
-//     primary: "#aaaa8d",
-//     'primary-light': "#c0c0aa",
-//   },
-
-
-
-
 //hack (for Wayland?) via https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/1997
 Gtk.IconTheme.get_default = function () {
   let theme = new Gtk.IconTheme();
@@ -1074,7 +1060,11 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button to submit the question to ask AI
       this._askAISubmit = new St.Button({
-        style_class: "button quick-toggle submit",
+        style_class: `button quick-toggle submit ${
+          this._mode === AskAI.MODES.ASK || this._mode === AskAI.MODES.WRITE ?
+            "submit--single-line" :
+            "submit--multi-line"
+        }`,
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,

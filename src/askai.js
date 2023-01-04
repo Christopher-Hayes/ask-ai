@@ -20,7 +20,7 @@ async function makeAIRequest(prompt, key, mode) {
 
   switch (mode) {
     case MODES.SUMMARIZE:
-      prompt = `Summarize the following:\n${prompt}`;
+      prompt = `Briefly summararize in a helpful way the following text:\n${prompt}`;
       break;
     case MODES.EDIT:
       prompt = `Correct grammar and spelling, as well as reword any confusing sentences in the following:\n${prompt}`;
