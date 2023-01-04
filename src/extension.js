@@ -426,6 +426,7 @@ let AskAIMenuButton = GObject.registerClass(
 
         // Slowly animate the submit button background color to a shade of green
         // * Right now this is not working. Color is not changing
+        /*
         this._askAISubmit.ease({
           background_color: new Clutter.Color({
             red: 0x00,
@@ -436,6 +437,7 @@ let AskAIMenuButton = GObject.registerClass(
           duration: 10000,
           mode: Clutter.AnimationMode.LINEAR,
         });
+        */
 
         // Update UI - Waiting for response
         this._waitingForResponse = true;
@@ -501,6 +503,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         this._askAIInfo.text = detailedInfo;
 
         // Set submit background back to #4d4dff
+        /*
         this._askAISubmit.ease({
           background_color: new Clutter.Color({
             red: 0x4d,
@@ -511,12 +514,14 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           duration: 1000,
           mode: Clutter.AnimationMode.LINEAR,
         });
+        */
       } catch (e) {
         logError(e);
         Main.notifyError("Error", e.message);
         this._askAIInfo.text = e.message;
 
         // Set submit background a muted shade of red
+        /*
         this._askAISubmit.ease({
           background_color: new Clutter.Color({
             red: 0xff,
@@ -527,6 +532,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           duration: 500,
           mode: Clutter.AnimationMode.LINEAR,
         });
+        */
         // Show error
         this._askAIResult.text = "Error: " + e.message;
         this._askAIResult.visible = true;
@@ -946,7 +952,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           line_wrap: true,
           line_wrap_mode: Pango.WrapMode.WORD_CHAR,
           ellipsize: Pango.EllipsizeMode.NONE,
-          selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 100) : Clutter.Color.new(0, 0, 0, 100),
+          selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 50) : Clutter.Color.new(0, 0, 0, 50),
           color: this._darkTheme ? Clutter.Color.new(255, 255, 255, 255) : Clutter.Color.new(0, 0, 0, 255),
         });
 
@@ -1129,7 +1135,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         selectable: true,
         // Note - Reactive is essential for allowing the text to be selectable
         reactive: true,
-        selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 100) : Clutter.Color.new(0, 0, 0, 100),
+        selection_color: this._darkTheme ? Clutter.Color.new(102, 255, 112, 50) : Clutter.Color.new(0, 0, 0, 50),
         color: this._darkTheme ? Clutter.Color.new(255, 255, 255, 255) : Clutter.Color.new(0, 0, 0, 255),
       });
 
