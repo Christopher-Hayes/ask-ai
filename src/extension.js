@@ -684,7 +684,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button for switching to the Ask mode
       const askMode = new St.Button({
-        style_class: "button quick-toggle",
+        style_class: "button quick-toggle ask-mode",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
@@ -705,7 +705,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button for switching to the Summarize mode
       const summarizeMode = new St.Button({
-        style_class: "button quick-toggle",
+        style_class: "button quick-toggle summarize-mode",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
@@ -726,7 +726,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button for switching to the Edit mode
       const editMode = new St.Button({
-        style_class: "button quick-toggle",
+        style_class: "button quick-toggle edit-mode",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
@@ -748,7 +748,7 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button for switching to the Write mode
       const writeMode = new St.Button({
-        style_class: "button quick-toggle",
+        style_class: "button quick-toggle write-mode",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,

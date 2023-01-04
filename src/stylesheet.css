@@ -73,8 +73,17 @@ Yaru: https://github.com/ubuntu/yaru/blob/master/gnome-shell/src/gnome-shell-sas
 	font-size: 18px;
 	font-weight: bold;
 }
-.modes .button {
-	margin-left: 10px;
+.modes .ask-mode {
+	border-radius: 99px 0 0 99px;
+}
+.modes .summarize-mode {
+	border-radius: 0;
+}
+.modes .edit-mode {
+	border-radius: 0;
+}
+.modes .write-mode {
+	border-radius: 0 99px 99px 0;
 }
 /*
 .ask-mode, .summarize-mode, .edit-mode, .write-mode {
@@ -104,12 +113,14 @@ Yaru: https://github.com/ubuntu/yaru/blob/master/gnome-shell/src/gnome-shell-sas
 	margin-bottom: 10px;
 }
 .input {
+	border-right: 0;
 	border-radius: 99px 0 0 99px !important;
 	padding: 5px 5px 5px 10px;
 }
 /* multi-line editor: */
 .input-container.input {
 	border: 2px solid #4d4dff;
+	border-right: 2px solid #4d4dff;
 	border-radius: 10px !important;
 	padding: 10px;
 }
