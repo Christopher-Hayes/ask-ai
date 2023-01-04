@@ -78,6 +78,10 @@ Main Styles
 	font-size: 18px;
 	font-weight: bold;
 }
+.modes .button {
+	margin-left: 10px;
+}
+/*
 .ask-mode, .summarize-mode, .edit-mode, .write-mode {
 	background-color: rgba(120, 120, 120, 0.2);
 	color: rgba(120, 120, 120, 0.7);
@@ -98,6 +102,7 @@ Main Styles
 	background-color: #4d4dff;
 	color: #fff;
 }
+*/
 
 /** Input section ----------------------------------------------------------- */
 .input-container {
@@ -119,9 +124,7 @@ Main Styles
 	border: 2px solid #4d4dff;
 }
 .submit {
-	border: 2px solid #4d4dff;
-	border-radius: 0 5px 5px 0;
-	border-left: 0;
+	margin-left: 10px;
 }
 
 /** AI response section ----------------------------------------------------- */

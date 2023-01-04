@@ -37,6 +37,20 @@ const WIDGET_POSITION = {
   LEFT: 2,
 };
 
+// Yaru theme colors
+// const YaruColors = {
+//   bark: {
+//     primary: "#5b5b43",
+//     'primary-light': "#787859",
+//   },
+//   'bark-dark': {
+//     primary: "#aaaa8d",
+//     'primary-light': "#c0c0aa",
+//   },
+
+
+
+
 //hack (for Wayland?) via https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/1997
 Gtk.IconTheme.get_default = function () {
   let theme = new Gtk.IconTheme();
@@ -62,11 +76,23 @@ let AskAIMenuButton = GObject.registerClass(
         this._darkTheme = theme === 'prefer-dark' || theme === 'true';
         this._askAI.set_style_class_name(`main ${this._darkTheme ? 'dark' : 'light'}`);
       });
+      // Get primary color from GNOME theme
+      const themeName = interfaceSettings.get_string('gtk-theme');
+      // If Yaru theme, parse the colors the theme name
+      if (themeName.startsWith('Yaru')) {
+        const colors = themeName.split('-');
+        this._primaryColor = `${colors[1]}`;
+      } else {
+        // Otherwise, use the default color
+        this._primaryColor = '#4c7899';
+      }
+
       // Keep track of pending requests
       this._waitingForResponse = false;
       // UI mode - Ask, Summarize, Edit, Write
       this._mode = AskAI.MODES.ASK;
       // Keep track of prompt and response for each mode
+      // Allows user to switch modes without losing their input/output
       this._prompt = {
         [AskAI.MODES.ASK]: "",
         [AskAI.MODES.SUMMARIZE]: "",
@@ -110,7 +136,7 @@ let AskAIMenuButton = GObject.registerClass(
       );
 
       // Bind signals
-      this.menu.connect("open-state-changed", this.recalcLayout.bind(this));
+      // this.menu.connect("open-state-changed", this.recalcLayout.bind(this));
 
       // Main UI that shows when topbar icon is clicked
       this.checkPositionInPanel();
@@ -183,38 +209,7 @@ let AskAIMenuButton = GObject.registerClass(
       }
     }
 
-    stop() {
-      if (this._timeoutCurrent) {
-        GLib.source_remove(this._timeoutCurrent);
-        this._timeoutCurrent = null;
-      }
-      if (this._timeoutFirstBoot) {
-        GLib.source_remove(this._timeoutFirstBoot);
-        this._timeoutFirstBoot = null;
-      }
-
-      if (this._timeoutMenuAlignent) {
-        GLib.source_remove(this._timeoutMenuAlignent);
-        this._timeoutMenuAlignent = null;
-      }
-
-      if (this._settingsC) {
-        this._settings.disconnect(this._settingsC);
-        this._settingsC = undefined;
-      }
-
-      if (this._settingsInterfaceC) {
-        this._settingsInterface.disconnect(this._settingsInterfaceC);
-        this._settingsInterfaceC = undefined;
-      }
-
-      if (this._globalThemeChangedId) {
-        let context = St.ThemeContext.get_for_stage(global.stage);
-        context.disconnect(this._globalThemeChangedId);
-        this._globalThemeChangedId = undefined;
-      }
-    }
-
+    // Load settings
     loadConfig() {
       this._settings = ExtensionUtils.getSettings(
         Me.metadata["settings-schema"]
@@ -271,13 +266,6 @@ let AskAIMenuButton = GObject.registerClass(
       );
     }
 
-    menuAlignmentChanged() {
-      if (this._currentAlignment != this._menu_alignment) {
-        return true;
-      }
-      return false;
-    }
-
     get _startupDelay() {
       if (!this._settings) this.loadConfig();
       return this._settings.get_int("delay-ext-init");
@@ -317,17 +305,56 @@ let AskAIMenuButton = GObject.registerClass(
       return button;
     }
 
+    // GNOME Shell extension lifecycle
+    stop() {
+      if (this._timeoutCurrent) {
+        GLib.source_remove(this._timeoutCurrent);
+        this._timeoutCurrent = null;
+      }
+      if (this._timeoutFirstBoot) {
+        GLib.source_remove(this._timeoutFirstBoot);
+        this._timeoutFirstBoot = null;
+      }
+
+      if (this._timeoutMenuAlignent) {
+        GLib.source_remove(this._timeoutMenuAlignent);
+        this._timeoutMenuAlignent = null;
+      }
+
+      if (this._settingsC) {
+        this._settings.disconnect(this._settingsC);
+        this._settingsC = undefined;
+      }
+
+      if (this._settingsInterfaceC) {
+        this._settingsInterface.disconnect(this._settingsInterfaceC);
+        this._settingsInterfaceC = undefined;
+      }
+
+      if (this._globalThemeChangedId) {
+        let context = St.ThemeContext.get_for_stage(global.stage);
+        context.disconnect(this._globalThemeChangedId);
+        this._globalThemeChangedId = undefined;
+      }
+    }
     _onActivate() {
       // focus the input field
       this._askAIInput.grab_key_focus();
     }
-
     _onPreferencesActivate() {
       this.menu.close();
       ExtensionUtils.openPrefs();
       return 0;
     }
 
+    // UI updates
+    menuAlignmentChanged() {
+      if (this._currentAlignment != this._menu_alignment) {
+        return true;
+      }
+      return false;
+    }
+    /*
     recalcLayout() {
       if (!this.menu.isOpen) return;
 
@@ -337,12 +364,15 @@ let AskAIMenuButton = GObject.registerClass(
         );
       }
     }
-
+    */
     checkAlignment() {
+      return;
+      /*
       let menuAlignment = 1.0 - this._menu_alignment / 100;
       if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
         menuAlignment = 1.0 - menuAlignment;
       this.menu._arrowAlignment = menuAlignment;
+      */
     }
 
     checkPositionInPanel() {
@@ -384,6 +414,9 @@ let AskAIMenuButton = GObject.registerClass(
       }
     }
 
+    //* Actually run the AI query
+    // The core http request is in askai.js
+    // This func is focused on updating the UI
     async makeAIRequest() {
       try {
         // Check if we are already waiting for a response
@@ -502,6 +535,44 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
       }
     }
 
+    //* MAIN UI
+    // Consists of 4 sections:
+    // - Header: title, mode selection
+    // - Input section: user input, submit button
+    // - Output section: AI response text
+    // - Footer: misc info text
+    buildUI() {
+      // Destroy all children
+      this._askAI.actor.destroy_all_children();
+
+      let content = new St.BoxLayout({
+        vertical: true,
+        x_expand: true,
+        y_expand: true,
+        style_class: "content",
+      });
+
+      // Add warning message if no OpenAI key is set. Use light red background color and dark red text color. Rounded corners. Padding.
+      // TODO: Expand this to a test request to the OpenAI API to see if the key is valid
+      if (this._settings.get_string("openai-key") === "") {
+        showNoKeyWarning(content);
+      }
+
+      // Header
+      content.add_actor(this.buildHeaderUI());
+
+      // User input, submit button
+      content.add_actor(this.buildInputUI());
+
+      // AI response text
+      content.add_actor(this.buildOutputUI());
+
+      // Footer
+      content.add_actor(this.buildFooterUI());
+
+      this._askAI.actor.add_child(content);
+    }
+
     // Show a warning if the user has not set the OpenAI key
     showNoKeyWarning(content) {
       const warningContainer = new St.BoxLayout({
@@ -585,6 +656,169 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
           }
         });
         */
+    }
+
+    buildHeaderUI() {
+      const headerContainer = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_expand: true,
+        style_class: "header",
+      });
+
+      // Create a label for the ask AI input field
+      let heading = new St.Label({
+        text: _("Ask AI"),
+        style_class: "heading",
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Add UI for switching between the different modes (Ask, Summarize, Edit, Write). Should be horizontal
+      const modesParent = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_expand: true,
+        style_class: "modes-parent",
+        x_align: Clutter.ActorAlign.END,
+      });
+      const modes = new St.BoxLayout({
+        vertical: false,
+        x_expand: false,
+        y_expand: true,
+        style_class: "modes quick-settings",
+        x_align: Clutter.ActorAlign.END,
+      });
+      modesParent.add(modes);
+
+      // Create a button for switching to the Ask mode
+      const askMode = new St.Button({
+        style_class: "button quick-toggle",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
+        track_hover: true,
+        width: 60,
+      });
+
+      // Set text on button
+      const askModeText = new St.Label({
+        text: _("Ask"),
+        style_class: "quick-toggle-label",
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Add text to button
+      askMode.set_child(askModeText);
+
+      // Create a button for switching to the Summarize mode
+      const summarizeMode = new St.Button({
+        style_class: "button quick-toggle",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
+        track_hover: true,
+        width: 100,
+      });
+
+      // Set text on button
+      const summarizeModeText = new St.Label({
+        text: _("Summarize"),
+        style_class: "quick-toggle-label",
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Add text to button
+      summarizeMode.set_child(summarizeModeText);
+
+      // Create a button for switching to the Edit mode
+      const editMode = new St.Button({
+        style_class: "button quick-toggle",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
+        track_hover: true,
+        reactive: true,
+        width: 70,
+      });
+
+      // Set text on button
+      const editModeText = new St.Label({
+        text: _("Edit"),
+        style_class: "quick-toggle-label",
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Add text to button
+      editMode.set_child(editModeText);
+
+      // Create a button for switching to the Write mode
+      const writeMode = new St.Button({
+        style_class: "button quick-toggle",
+        can_focus: true,
+        y_align: Clutter.ActorAlign.CENTER,
+        x_align: Clutter.ActorAlign.END,
+        track_hover: true,
+        width: 70,
+      });
+
+      // Set text on button
+      const writeModeText = new St.Label({
+        text: _("Write"),
+        style_class: "quick-toggle-label",
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Give the mode that is currently active a different style
+      switch (this._mode) {
+        case AskAI.MODES.ASK:
+          askMode.checked = true;
+          break;
+        case AskAI.MODES.SUMMARIZE:
+          summarizeMode.checked = true;
+          break;
+        case AskAI.MODES.EDIT:
+          editMode.checked = true;
+          break;
+        case AskAI.MODES.WRITE:
+          writeMode.checked = true;
+          break;
+      }
+
+      // Add text to button
+      writeMode.set_child(writeModeText);
+
+      // Add buttons to the modes container
+      modes.add_actor(askMode);
+      modes.add_actor(summarizeMode);
+      modes.add_actor(editMode);
+      modes.add_actor(writeMode);
+
+      // Add hooks to the buttons
+      askMode.connect("clicked", () => {
+        this._mode = AskAI.MODES.ASK;
+        this.buildUI();
+      });
+      summarizeMode.connect("clicked", () => {
+        this._mode = AskAI.MODES.SUMMARIZE;
+        this.buildUI();
+      });
+      editMode.connect("clicked", () => {
+        this._mode = AskAI.MODES.EDIT;
+        this.buildUI();
+      });
+      writeMode.connect("clicked", () => {
+        this._mode = AskAI.MODES.WRITE;
+        this.buildUI();
+      });
+
+      // Add heading and modes to the header container
+      headerContainer.add_actor(heading);
+      headerContainer.add_actor(modesParent);
+      return headerContainer;
     }
 
     buildInputUI() {
@@ -834,26 +1068,21 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       // Create a button to submit the question to ask AI
       this._askAISubmit = new St.Button({
-        style_class: "btn submit",
+        style_class: "button quick-toggle submit",
         can_focus: true,
         y_align: Clutter.ActorAlign.CENTER,
         x_align: Clutter.ActorAlign.END,
         track_hover: true,
         width: 100,
-        background_color: new Clutter.Color({
-          red: 0x4d,
-          green: 0x4d,
-          blue: 0xff,
-          alpha: 0xff,
-        }),
       });
 
       // set text on button
       const text = ["Ask", "Summarize", "Edit", "Write"][this._mode] ?? "Ask";
       this._askAISubmitText = new St.Label({
         text,
-        style_class: "btn__text submit__text",
+        style_class: "quick-toggle-label",
         x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
       });
 
       this._askAISubmit.set_child(this._askAISubmitText);
@@ -1105,193 +1334,6 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
 
       footerContainer.add(this._askAIInfo);
       return footerContainer;
-    }
-
-    buildUI() {
-      // Destroy all children
-      this._askAI.actor.destroy_all_children();
-
-      let content = new St.BoxLayout({
-        vertical: true,
-        x_expand: true,
-        y_expand: true,
-        style_class: "content",
-      });
-
-      // Add warning message if no OpenAI key is set. Use light red background color and dark red text color. Rounded corners. Padding.
-      // TODO: Expand this to a test request to the OpenAI API to see if the key is valid
-      if (this._settings.get_string("openai-key") === "") {
-        showNoKeyWarning(content);
-      }
-
-      // Header
-      content.add_actor(this.buildHeaderUI());
-
-      // User input, submit button
-      content.add_actor(this.buildInputUI());
-
-      // AI response text
-      content.add_actor(this.buildOutputUI());
-
-      // Footer
-      content.add_actor(this.buildFooterUI());
-
-      this._askAI.actor.add_child(content);
-    }
-
-    buildHeaderUI() {
-      const headerContainer = new St.BoxLayout({
-        vertical: false,
-        x_expand: true,
-        y_expand: true,
-        style_class: "header",
-      });
-
-      // Create a label for the ask AI input field
-      let heading = new St.Label({
-        text: _("Ask AI"),
-        style_class: "heading",
-        y_align: Clutter.ActorAlign.CENTER,
-      });
-
-      // Add UI for switching between the different modes (Ask, Summarize, Edit, Write). Should be horizontal
-      const modesParent = new St.BoxLayout({
-        vertical: false,
-        x_expand: true,
-        y_expand: true,
-        style_class: "modes-parent",
-        x_align: Clutter.ActorAlign.END,
-      });
-      const modes = new St.BoxLayout({
-        vertical: false,
-        x_expand: false,
-        y_expand: true,
-        style_class: "modes",
-        x_align: Clutter.ActorAlign.END,
-      });
-      modesParent.add(modes);
-
-      // Create a button for switching to the Ask mode
-      const askMode = new St.Button({
-        style_class: "ask-mode",
-        can_focus: true,
-        y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.END,
-        track_hover: true,
-        x_expand: false,
-      });
-
-      // Set text on button
-      const askModeText = new St.Label({
-        text: _("Ask"),
-        style_class: "ask-mode__text",
-        x_align: Clutter.ActorAlign.CENTER,
-      });
-
-      // Add text to button
-      askMode.set_child(askModeText);
-
-      // Create a button for switching to the Summarize mode
-      const summarizeMode = new St.Button({
-        style_class: "summarize-mode",
-        can_focus: true,
-        y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.END,
-        track_hover: true,
-      });
-
-      // Set text on button
-      const summarizeModeText = new St.Label({
-        text: _("Summarize"),
-        style_class: "summarize-mode__text",
-        x_align: Clutter.ActorAlign.CENTER,
-      });
-
-      // Add text to button
-      summarizeMode.set_child(summarizeModeText);
-
-      // Create a button for switching to the Edit mode
-      const editMode = new St.Button({
-        style_class: "edit-mode",
-        can_focus: true,
-        y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.END,
-        track_hover: true,
-      });
-
-      // Set text on button
-      const editModeText = new St.Label({
-        text: _("Edit"),
-        style_class: "edit-mode__text",
-        x_align: Clutter.ActorAlign.CENTER,
-      });
-
-      // Add text to button
-      editMode.set_child(editModeText);
-
-      // Create a button for switching to the Write mode
-      const writeMode = new St.Button({
-        style_class: "write-mode",
-        can_focus: true,
-        y_align: Clutter.ActorAlign.CENTER,
-        x_align: Clutter.ActorAlign.END,
-        track_hover: true,
-      });
-
-      // Set text on button
-      const writeModeText = new St.Label({
-        text: _("Write"),
-        style_class: "write-mode__text",
-        x_align: Clutter.ActorAlign.CENTER,
-      });
-
-      // Give the mode that is currently active a different style
-      switch (this._mode) {
-        case AskAI.MODES.ASK:
-          askMode.add_style_class_name("active");
-          break;
-        case AskAI.MODES.SUMMARIZE:
-          summarizeMode.add_style_class_name("active");
-          break;
-        case AskAI.MODES.EDIT:
-          editMode.add_style_class_name("active");
-          break;
-        case AskAI.MODES.WRITE:
-          writeMode.add_style_class_name("active");
-          break;
-      }
-
-      // Add text to button
-      writeMode.set_child(writeModeText);
-
-      // Add buttons to the modes container
-      modes.add_actor(askMode);
-      modes.add_actor(summarizeMode);
-      modes.add_actor(editMode);
-      modes.add_actor(writeMode);
-
-      // Add hooks to the buttons
-      askMode.connect("clicked", () => {
-        this._mode = AskAI.MODES.ASK;
-        this.buildUI();
-      });
-      summarizeMode.connect("clicked", () => {
-        this._mode = AskAI.MODES.SUMMARIZE;
-        this.buildUI();
-      });
-      editMode.connect("clicked", () => {
-        this._mode = AskAI.MODES.EDIT;
-        this.buildUI();
-      });
-      writeMode.connect("clicked", () => {
-        this._mode = AskAI.MODES.WRITE;
-        this.buildUI();
-      });
-
-      // Add heading and modes to the header container
-      headerContainer.add_actor(heading);
-      headerContainer.add_actor(modesParent);
-      return headerContainer;
     }
   }
 );
