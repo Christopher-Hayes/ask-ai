@@ -147,3 +147,48 @@ function http(url,
     }
   });
 }
+
+//* Token estimation
+// Credit @Schroeder - https://stackoverflow.com/a/74875104/2096769
+const promptLenToTokens = (promptLen) => {
+  // returns an estimate of #tokens corresponding to #characters nchars
+  return Math.max(0, Math.floor((promptLen - init_offset) * Math.exp(-1)));
+};
+
+const tokensToPromptLen = (tokenCount) => {
+  // returns an estimate of #characters corresponding to #tokens ntokens
+  return Math.max(0, Math.floor(tokenCount * Math.exp(1)) + 2);
+};
+
+const maxTokensToLen = (maxTokens) => {
+  // returns a number of characters very likely to correspond <= maxTokens
+  const sqrtMargin = 0.5;
+  const linMargin = 1.010175047; // = e - 1.001 - sqrt(1 - sqrt_margin) // ensures return 1 when maxTokens=1
+
+  return Math.max(
+    0,
+    Math.floor(maxTokens * Math.exp(1) - linMargin - Math.sqrt(Math.max(0, maxTokens - sqrtMargin)))
+  );
+};
+
+const truncateTextToMaxTokens = (text, maxTokens) => {
+  // returns a truncation of text to make it (likely) fit within a token limit
+  // So the output string is very likely to have <= maxTokens, no guarantees though.
+  const charIndex = Math.min(text.length, nchars_leq_ntokens_approx(maxTokens));
+
+  return text.slice(0, charIndex);
+};
+
+// Lodash debounce
+const debounce = (func, delay, { leading } = {}) => {
+  let timerId
+
+  return (...args) => {
+    if (!timerId && leading) {
+      func(...args)
+    }
+    clearTimeout(timerId)
+
+    timerId = setTimeout(() => func(...args), delay)
+  }
+}

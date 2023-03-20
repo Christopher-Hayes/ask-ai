@@ -56,12 +56,19 @@ let AskAIMenuButton = GObject.registerClass(
           )
       let theme = interfaceSettings.get_string('color-scheme');
       this._darkTheme = theme === 'prefer-dark' || theme === 'true';
-      // when the interface color scheme changes, update the theme
+
+      // Listen for color-scheme changes in interfaceSettings
       interfaceSettings.connect('changed::color-scheme', () => {
-        theme = interfaceSettings.get_string('color-scheme');
+        // Get the current theme from the settings
+        let theme = interfaceSettings.get_string('color-scheme');
+      
+        // Set _darkTheme based on the retrieved theme value
         this._darkTheme = theme === 'prefer-dark' || theme === 'true';
+      
+        // Apply the appropriate style class depending on the _darkTheme value
         this._askAI.set_style_class_name(`main ${this._darkTheme ? 'dark' : 'light'}`);
       });
+     
       // Get primary color from GNOME theme
       const themeName = interfaceSettings.get_string('gtk-theme');
       // If Yaru theme, parse the colors the theme name
@@ -441,6 +448,12 @@ let AskAIMenuButton = GObject.registerClass(
           throw new Error("Please enter a query.");
         }
 
+        // Set submit button as "checked"
+        this._askAISubmit.checked = true;
+        // Disable input field, grey out text
+        this._askAIInput.reactive = false;
+        this._askAIInputText.set_editable(false);
+
         const formattedQueryText =
           this._mode === "ask" || this._mode === "write"
             ? Helpers.formatPrompt(queryText)
@@ -524,6 +537,10 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         this._askAIResult.visible = true;
         this._waitingForResponse = false;
         this._askAISubmitText.text = "Error";
+      } finally {
+        this._askAISubmit.checked = false;
+        this._askAIInput.reactive = true;
+        this._askAIInputText.set_editable(true);
       }
     }
 
@@ -1044,6 +1061,16 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         inputContainer.add_actor(this._askAIInput);
       }
 
+      const estimateTokens = () => {
+        const text = this._askAIInputText.get_text();
+        this._tokenEstimate.text = Helpers.promptLenToTokens(text.length);
+      };
+
+      // Add key up event listsner to input text to update token estimate
+      this._askAIInputText.connect("key-release-event", () => {
+        Helpers.debounce(estimateTokens, 100);
+      })
+
       // If previous prompt is in state, show it
       if (this._prompt[this._mode]) {
         this._askAIInputText.set_markup(this._prompt[this._mode]);
@@ -1088,8 +1115,17 @@ Tokens: ${result.usage.total_tokens} (~$${approximateCost.toFixed(
         await this.makeAIRequest();
       });
 
+      // Add text element for token estimate
+      this._tokenEstimate = new St.Label({
+        text: "",
+        style_class: "token-estimate",
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
       buttonContainer.add_actor(this._askAISubmit);
       inputContainer.add_actor(buttonContainer);
+      inputContainer.add_actor(this._tokenEstimate);
       return inputContainer;
     }
 
